@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"go.quinn.io/go-astro/pages"
 )
 
 // PageRoute represents a route generated from a page file
@@ -34,7 +35,6 @@ func GenerateRoutes(e *echo.Echo, pagesDir string) error {
 func scanPagesDirectory(pagesDir string) ([]PageRoute, error) {
 	var routes []PageRoute
 
-	err := filepath.Walk(pagesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
