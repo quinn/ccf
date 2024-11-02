@@ -73,33 +73,48 @@ func scanPagesDirectory(pagesDir string) ([]PageRoute, error) {
 // parseRouteFromFilename converts a template filename into a route
 func parseRouteFromFilename(filename string) (PageRoute, error) {
 	// Remove .templ suffix
-	routePath := strings.TrimSuffix(filename, ".templ")
-
-	// Convert Windows path separators to forward slashes
-	routePath = filepath.ToSlash(routePath)
+	templatePath := strings.TrimSuffix(filename, ".templ")
 
 	var params []string
-	// Handle dynamic parameters (e.g., [slug])
-	segments := strings.Split(routePath, "/")
-	for i, segment := range segments {
-		if strings.HasPrefix(segment, "[") && strings.HasSuffix(segment, "]") {
-			// Extract parameter name without brackets
-			param := segment[1 : len(segment)-1]
-			params = append(params, param)
-			// Replace [param] with :param in route path
-			segments[i] = ":" + param
+	var routePath string
+	var argName string
+	var brackets bool
+
+	// Parse the path and extract parameters
+	for _, char := range templatePath {
+		switch char {
+		case '[':
+			brackets = true
+		case ']':
+			brackets = false
+			params = append(params, argName)
+			routePath += ":" + argName
+			argName = ""
+		default:
+			if brackets {
+				argName += string(char)
+			} else {
+				routePath += string(char)
+			}
 		}
 	}
 
 	// Handle index routes
-	if segments[len(segments)-1] == "index" {
-		segments = segments[:len(segments)-1]
+	if strings.HasSuffix(routePath, "index") {
+		routePath = strings.TrimSuffix(routePath, "index")
 	}
 
-	// Reconstruct route path
-	routePath = "/" + strings.Join(segments, "/")
-	if routePath == "/" {
-		routePath = ""
+	// Ensure path starts with /
+	if !strings.HasPrefix(routePath, "/") {
+		routePath = "/" + routePath
+	}
+
+	// Clean up any double slashes
+	routePath = strings.ReplaceAll(routePath, "//", "/")
+
+	// Trim trailing slash unless it's the root path
+	if routePath != "/" && strings.HasSuffix(routePath, "/") {
+		routePath = strings.TrimSuffix(routePath, "/")
 	}
 
 	return PageRoute{
