@@ -14,12 +14,18 @@ func RegisterRoutes(e *echo.Echo) {
 
 // BlogSlugHandler handles requests to /blog/:slug
 func BlogSlugHandler(c echo.Context) error {
-	return pages.BlogSlug(
-		c.Param("slug"),
-	).Render(c.Request().Context(), c.Response().Writer)
+	result, err := pages.BlogSlugHandler(c, c.Param("slug"))
+	if err != nil {
+		return err
+	}
+	return pages.BlogSlug(result).Render(c.Request().Context(), c.Response().Writer)
 }
 
 // IndexHandler handles requests to /
 func IndexHandler(c echo.Context) error {
-	return pages.Index().Render(c.Request().Context(), c.Response().Writer)
+	result, err := pages.IndexHandler(c)
+	if err != nil {
+		return err
+	}
+	return pages.Index(result).Render(c.Request().Context(), c.Response().Writer)
 }

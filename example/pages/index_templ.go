@@ -10,11 +10,11 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/labstack/echo/v4"
 
-func IndexHandler(c echo.Context) []map[string]string {
+func IndexHandler(c echo.Context) ([]map[string]string, error) {
 	return []map[string]string{
 		{"title": "First Blog Post", "slug": "first-post"},
 		{"title": "Second Blog Post", "slug": "second-post"},
-	}
+	}, nil
 }
 
 func Index(posts []map[string]string) templ.Component {

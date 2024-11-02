@@ -10,8 +10,8 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/labstack/echo/v4"
 
-func BlogSlugHandler(c echo.Context, slug string) string {
-	return slug
+func BlogSlugHandler(c echo.Context, slug string) (string, error) {
+	return slug, nil
 }
 
 func BlogSlug(slug string) templ.Component {
