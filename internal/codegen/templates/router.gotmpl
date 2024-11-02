@@ -3,25 +3,28 @@ package {{.PackageName}}
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/pages"
+	"github.com/quinn/go-astro/example/pages"
 )
 
 // RegisterRoutes adds all page routes to the Echo instance
 func RegisterRoutes(e *echo.Echo) {
-	{{range .Routes}}
-	e.GET("{{.Path}}", {{.HandlerName}}){{end}}
+{{- range .Routes}}
+	e.GET("{{.Path}}", {{.HandlerName}})
+{{- end}}
 }
 
-{{range .Routes}}
+{{- range .Routes}}
+
 // {{.HandlerName}} handles requests to {{.Path}}
 func {{.HandlerName}}(c echo.Context) error {
-	{{if .Params}}
+	{{- if .Params}}
 	return pages.{{.Component}}(
-		{{range .Params}}c.Param("{{.}}"),
-		{{end}}
+		{{- range .Params}}
+		c.Param("{{.}}"),
+		{{- end}}
 	).Render(c.Request().Context(), c.Response().Writer)
-	{{else}}
+	{{- else}}
 	return pages.{{.Component}}().Render(c.Request().Context(), c.Response().Writer)
-	{{end}}
+	{{- end}}
 }
-{{end}}
+{{- end}}
