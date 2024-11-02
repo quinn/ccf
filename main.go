@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"path/filepath"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -14,8 +13,9 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 
-	pagesDir := filepath.Join(".", "pages")
-	if err := router.GenerateRoutes(e, pagesDir); err != nil {
+	// Register routes from generated code
+	router.RegisterRoutes(e)
+
 		log.Fatalf("failed to generate routes: %v", err)
 	}
 
