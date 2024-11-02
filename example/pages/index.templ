@@ -1,0 +1,35 @@
+package pages
+
+import "github.com/labstack/echo/v4"
+
+func IndexHandler(c echo.Context) []map[string]string {
+	return []map[string]string{
+		{"title": "First Blog Post", "slug": "first-post"},
+		{"title": "Second Blog Post", "slug": "second-post"},
+	}
+}
+
+templ Index(posts []map[string]string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<title>Go Astro</title>
+		</head>
+		<body>
+			<h1>Welcome to Go Astro</h1>
+			<p>A Go implementation of Astro-like functionality</p>
+			<nav>
+				<ul>
+					for _, post := range posts {
+						<li>
+							<a href={ templ.URL("/blog/" + post["slug"]) }>
+								{ post["title"] }
+							</a>
+						</li>
+					}
+				</ul>
+			</nav>
+		</body>
+	</html>
+}

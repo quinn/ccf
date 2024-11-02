@@ -1,5 +1,9 @@
 version: '3'
 tasks:
-  build:
+  example:build:
     cmds:
       - go run cmd/generate/main.go -output example/router/router.go -package router
+
+  example:run:
+    cmds:
+      - cd example && go run main.go
