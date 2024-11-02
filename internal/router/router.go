@@ -25,7 +25,9 @@ func GenerateRoutes(e *echo.Echo, pagesDir string) error {
 	}
 
 	for _, route := range routes {
-		registerRoute(e, route)
+		if err := registerRoute(e, route); err != nil {
+			return fmt.Errorf("failed to register route %s: %w", route.Path, err)
+		}
 	}
 
 	return nil
@@ -44,9 +46,15 @@ func scanPagesDirectory(pagesDir string) ([]PageRoute, error) {
 			return nil
 		}
 
-		route, err := parseRouteFromFilename(path, pagesDir)
+		// Get relative path from pages directory
+		relPath, err := filepath.Rel(pagesDir, path)
 		if err != nil {
-			return fmt.Errorf("failed to parse route from %s: %w", path, err)
+			return fmt.Errorf("failed to get relative path: %w", err)
+		}
+
+		route, err := parseRouteFromFilename(relPath)
+		if err != nil {
+			return fmt.Errorf("failed to parse route from %s: %w", relPath, err)
 		}
 
 		routes = append(routes, route)
@@ -54,19 +62,18 @@ func scanPagesDirectory(pagesDir string) ([]PageRoute, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to scan pages directory: %w", err)
 	}
 
 	return routes, nil
 }
 
 // parseRouteFromFilename converts a template filename into a route
-func parseRouteFromFilename(filename, pagesDir string) (PageRoute, error) {
-	// Remove pages directory prefix and .templ suffix
-	routePath := strings.TrimPrefix(filename, pagesDir)
-	routePath = strings.TrimSuffix(routePath, ".templ")
+func parseRouteFromFilename(filename string) (PageRoute, error) {
+	// Remove .templ suffix
+	routePath := strings.TrimSuffix(filename, ".templ")
 
-	// Convert Windows path separators to forward slashes if needed
+	// Convert Windows path separators to forward slashes
 	routePath = filepath.ToSlash(routePath)
 
 	var params []string
@@ -82,10 +89,15 @@ func parseRouteFromFilename(filename, pagesDir string) (PageRoute, error) {
 		}
 	}
 
+	// Handle index routes
+	if segments[len(segments)-1] == "index" {
+		segments = segments[:len(segments)-1]
+	}
+
 	// Reconstruct route path
-	routePath = strings.Join(segments, "/")
-	if !strings.HasPrefix(routePath, "/") {
-		routePath = "/" + routePath
+	routePath = "/" + strings.Join(segments, "/")
+	if routePath == "/" {
+		routePath = ""
 	}
 
 	return PageRoute{
@@ -96,9 +108,13 @@ func parseRouteFromFilename(filename, pagesDir string) (PageRoute, error) {
 }
 
 // registerRoute adds a route to the Echo instance
-func registerRoute(e *echo.Echo, route PageRoute) {
-	e.GET(route.Path, func(c echo.Context) error {
-		// Handle different route types based on the template path
+func registerRoute(e *echo.Echo, route PageRoute) error {
+	path := route.Path
+	if path == "" {
+		path = "/"
+	}
+
+	e.GET(path, func(c echo.Context) error {
 		switch {
 		case strings.HasSuffix(route.TemplatePath, "index.templ"):
 			return pages.Index().Render(c.Request().Context(), c.Response().Writer)
@@ -111,4 +127,6 @@ func registerRoute(e *echo.Echo, route PageRoute) {
 			return fmt.Errorf("unknown template: %s", route.TemplatePath)
 		}
 	})
+
+	return nil
 }
