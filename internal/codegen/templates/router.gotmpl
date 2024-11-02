@@ -18,13 +18,17 @@ func RegisterRoutes(e *echo.Echo) {
 // {{.HandlerName}} handles requests to {{.Path}}
 func {{.HandlerName}}(c echo.Context) error {
 	{{- if .Params}}
-	return pages.{{.Component}}(
-		{{- range .Params}}
-		c.Param("{{.}}"),
-		{{- end}}
-	).Render(c.Request().Context(), c.Response().Writer)
+	result, err := pages.{{.Component}}Handler(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
+	if err != nil {
+		return err
+	}
+	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
 	{{- else}}
-	return pages.{{.Component}}().Render(c.Request().Context(), c.Response().Writer)
+	result, err := pages.{{.Component}}Handler(c)
+	if err != nil {
+		return err
+	}
+	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
 	{{- end}}
 }
 {{- end}}
