@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"text/template"
+	"unicode"
 )
 
 // PageRoute represents a route generated from a page file
@@ -14,6 +15,7 @@ type PageRoute struct {
 	TemplatePath string
 	HandlerName  string
 	Params       []string
+	Component    string
 }
 
 // Generator handles the code generation for routes
@@ -48,7 +50,7 @@ func (g *Generator) scanPagesDirectory() ([]PageRoute, error) {
 
 	err := filepath.Walk(g.PagesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to walk directory: %w", err)
 		}
 
 		if info.IsDir() || !strings.HasSuffix(info.Name(), ".templ") {
@@ -77,6 +79,22 @@ func (g *Generator) scanPagesDirectory() ([]PageRoute, error) {
 	return routes, nil
 }
 
+// toUpperCamelCase converts a string to upper camel case
+func toUpperCamelCase(s string) string {
+	words := strings.FieldsFunc(s, func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	})
+
+	var result strings.Builder
+	for _, word := range words {
+		if word == "" {
+			continue
+		}
+		result.WriteString(strings.ToUpper(word[:1]) + strings.ToLower(word[1:]))
+	}
+	return result.String()
+}
+
 // parseRouteFromFilename converts a template filename into a route
 func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 	// Remove .templ suffix and get the base filename without directory
@@ -85,7 +103,7 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 
 	var params []string
 	var routeParts []string
-	var handlerName string
+	var handlerParts []string
 
 	// Split the path into segments by periods
 	segments := strings.Split(base, ".")
@@ -95,20 +113,15 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 			param := segment[1 : len(segment)-1]
 			params = append(params, param)
 			routeParts = append(routeParts, ":"+param)
+			// Convert parameter to upper camel case for handler name
+			handlerParts = append(handlerParts, toUpperCamelCase(param))
 		} else {
 			routeParts = append(routeParts, segment)
+			handlerParts = append(handlerParts, toUpperCamelCase(segment))
 		}
 	}
 
 	routePath := "/" + strings.Join(routeParts, "/")
-
-	// Handle index routes
-	if strings.HasSuffix(routePath, "index") {
-		routePath = strings.TrimSuffix(routePath, "index")
-		handlerName = "HandleIndex"
-	} else if strings.Contains(routePath, "blog") {
-		handlerName = "HandleBlogPost"
-	}
 
 	// Clean up the route path
 	routePath = strings.ReplaceAll(routePath, "//", "/")
@@ -116,11 +129,18 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 		routePath = strings.TrimSuffix(routePath, "/")
 	}
 
+	// Generate handler name by combining all parts and adding Handler suffix
+	handlerName := strings.Join(handlerParts, "") + "Handler"
+
+	// Generate component name (without Handler suffix)
+	component := strings.Join(handlerParts, "")
+
 	return PageRoute{
 		Path:         routePath,
 		TemplatePath: filename,
 		HandlerName:  handlerName,
 		Params:       params,
+		Component:    component,
 	}, nil
 }
 
@@ -141,16 +161,17 @@ func RegisterRoutes(e *echo.Echo) {
 }
 
 {{range .Routes}}
-{{if eq .HandlerName "HandleIndex"}}
-func HandleIndex(c echo.Context) error {
-	return pages.Index().Render(c.Request().Context(), c.Response().Writer)
+// {{.HandlerName}} handles requests to {{.Path}}
+func {{.HandlerName}}(c echo.Context) error {
+	{{if .Params}}
+	return pages.{{.Component}}(
+		{{range .Params}}c.Param("{{.}}"),
+		{{end}}
+	).Render(c.Request().Context(), c.Response().Writer)
+	{{else}}
+	return pages.{{.Component}}().Render(c.Request().Context(), c.Response().Writer)
+	{{end}}
 }
-{{else if eq .HandlerName "HandleBlogPost"}}
-func HandleBlogPost(c echo.Context) error {
-	slug := c.Param("slug")
-	return pages.BlogPost(slug).Render(c.Request().Context(), c.Response().Writer)
-}
-{{end}}
 {{end}}
 `
 
