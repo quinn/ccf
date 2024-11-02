@@ -2,6 +2,7 @@ package router
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +29,7 @@ func GenerateRoutes(e *echo.Echo, pagesDir string) error {
 		if err := registerRoute(e, route); err != nil {
 			return fmt.Errorf("failed to register route %s: %w", route.Path, err)
 		}
+		log.Printf("Registered route: %s (template: %s)", route.Path, route.TemplatePath)
 	}
 
 	return nil
@@ -114,19 +116,24 @@ func registerRoute(e *echo.Echo, route PageRoute) error {
 		path = "/"
 	}
 
-	e.GET(path, func(c echo.Context) error {
+	handler := func(c echo.Context) error {
+		log.Printf("Handling request for path: %s", c.Request().URL.Path)
+
 		switch {
 		case strings.HasSuffix(route.TemplatePath, "index.templ"):
 			return pages.Index().Render(c.Request().Context(), c.Response().Writer)
 
 		case strings.Contains(route.TemplatePath, "blog.[slug].templ"):
 			slug := c.Param("slug")
+			log.Printf("Blog post request with slug: %s", slug)
 			return pages.BlogPost(slug).Render(c.Request().Context(), c.Response().Writer)
 
 		default:
 			return fmt.Errorf("unknown template: %s", route.TemplatePath)
 		}
-	})
+	}
 
+	e.GET(path, handler)
+	log.Printf("Registered handler for path: %s", path)
 	return nil
 }
