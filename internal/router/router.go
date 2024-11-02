@@ -35,6 +35,7 @@ func GenerateRoutes(e *echo.Echo, pagesDir string) error {
 func scanPagesDirectory(pagesDir string) ([]PageRoute, error) {
 	var routes []PageRoute
 
+	err := filepath.Walk(pagesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -97,7 +98,17 @@ func parseRouteFromFilename(filename, pagesDir string) (PageRoute, error) {
 // registerRoute adds a route to the Echo instance
 func registerRoute(e *echo.Echo, route PageRoute) {
 	e.GET(route.Path, func(c echo.Context) error {
-		// TODO: Implement template rendering
-		return c.String(200, fmt.Sprintf("Template: %s, Path: %s", route.TemplatePath, route.Path))
+		// Handle different route types based on the template path
+		switch {
+		case strings.HasSuffix(route.TemplatePath, "index.templ"):
+			return pages.Index().Render(c.Request().Context(), c.Response().Writer)
+
+		case strings.Contains(route.TemplatePath, "blog.[slug].templ"):
+			slug := c.Param("slug")
+			return pages.BlogPost(slug).Render(c.Request().Context(), c.Response().Writer)
+
+		default:
+			return fmt.Errorf("unknown template: %s", route.TemplatePath)
+		}
 	})
 }
