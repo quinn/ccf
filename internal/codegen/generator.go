@@ -79,33 +79,28 @@ func (g *Generator) scanPagesDirectory() ([]PageRoute, error) {
 
 // parseRouteFromFilename converts a template filename into a route
 func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
-	// Remove .templ suffix
-	templatePath := strings.TrimSuffix(filename, ".templ")
+	// Remove .templ suffix and get the base filename without directory
+	base := filepath.Base(filename)
+	base = strings.TrimSuffix(base, ".templ")
 
 	var params []string
-	var routePath string
-	var argName string
-	var brackets bool
+	var routeParts []string
 	var handlerName string
 
-	// Parse the path and extract parameters
-	for _, char := range templatePath {
-		switch char {
-		case '[':
-			brackets = true
-		case ']':
-			brackets = false
-			params = append(params, argName)
-			routePath += ":" + argName
-			argName = ""
-		default:
-			if brackets {
-				argName += string(char)
-			} else {
-				routePath += string(char)
-			}
+	// Split the path into segments by periods
+	segments := strings.Split(base, ".")
+	for _, segment := range segments {
+		if strings.HasPrefix(segment, "[") && strings.HasSuffix(segment, "]") {
+			// Extract parameter name without brackets
+			param := segment[1 : len(segment)-1]
+			params = append(params, param)
+			routeParts = append(routeParts, ":"+param)
+		} else {
+			routeParts = append(routeParts, segment)
 		}
 	}
+
+	routePath := "/" + strings.Join(routeParts, "/")
 
 	// Handle index routes
 	if strings.HasSuffix(routePath, "index") {
@@ -115,15 +110,8 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 		handlerName = "HandleBlogPost"
 	}
 
-	// Ensure path starts with /
-	if !strings.HasPrefix(routePath, "/") {
-		routePath = "/" + routePath
-	}
-
-	// Clean up any double slashes
+	// Clean up the route path
 	routePath = strings.ReplaceAll(routePath, "//", "/")
-
-	// Trim trailing slash unless it's the root path
 	if routePath != "/" && strings.HasSuffix(routePath, "/") {
 		routePath = strings.TrimSuffix(routePath, "/")
 	}
