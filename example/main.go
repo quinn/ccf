@@ -6,15 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"go.quinn.io/go-astro/example/router"
 )
 
 func main() {
 	e := echo.New()
 	e.Use(middleware.Logger())
 
-	// Routes will be registered here from generated code
-	// After running the generator, import and use the generated router package:
-	// router.RegisterRoutes(e)
+	// Register routes from generated code
+	router.RegisterRoutes(e)
 
 	// Print registered routes
 	for _, route := range e.Routes() {

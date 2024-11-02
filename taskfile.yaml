@@ -1,0 +1,5 @@
+version: '3'
+tasks:
+  build:
+    cmds:
+      - go run cmd/generate/main.go -output example/router/router.go -package router
