@@ -111,7 +111,7 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 
 	// Split the path into segments by periods
 	segments := strings.Split(base, ".")
-	for _, segment := range segments {
+	for i, segment := range segments {
 		if strings.HasPrefix(segment, "[") && strings.HasSuffix(segment, "]") {
 			// Extract parameter name without brackets
 			param := segment[1 : len(segment)-1]
@@ -120,7 +120,12 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 			// Convert parameter to upper camel case for handler name
 			handlerParts = append(handlerParts, toUpperCamelCase(param))
 		} else {
-			routeParts = append(routeParts, segment)
+			// Special case for index
+			if segment == "index" && i == 0 {
+				routeParts = append(routeParts, "")
+			} else {
+				routeParts = append(routeParts, segment)
+			}
 			handlerParts = append(handlerParts, toUpperCamelCase(segment))
 		}
 	}

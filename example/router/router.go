@@ -3,26 +3,23 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/example/pages"
+	"github.com/quinn/go-astro/example/pages"
 )
 
 // RegisterRoutes adds all page routes to the Echo instance
 func RegisterRoutes(e *echo.Echo) {
-
-	e.GET("/blog/:slug", HandleBlogPost)
-	e.GET("/", HandleIndex)
+	e.GET("/blog/:slug", BlogSlugHandler)
+	e.GET("/index", IndexHandler)
 }
 
-
-
-func HandleBlogPost(c echo.Context) error {
-	slug := c.Param("slug")
-	return pages.BlogPost(slug).Render(c.Request().Context(), c.Response().Writer)
+// BlogSlugHandler handles requests to /blog/:slug
+func BlogSlugHandler(c echo.Context) error {
+	return pages.BlogSlug(
+		c.Param("slug"),
+	).Render(c.Request().Context(), c.Response().Writer)
 }
 
-
-func HandleIndex(c echo.Context) error {
+// IndexHandler handles requests to /index
+func IndexHandler(c echo.Context) error {
 	return pages.Index().Render(c.Request().Context(), c.Response().Writer)
 }
-
-
