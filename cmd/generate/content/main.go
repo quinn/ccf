@@ -26,7 +26,7 @@ func getContentDirs(contentDir string) ([]string, error) {
 }
 
 func main() {
-	output := flag.String("output", "example/content/generated.go", "Output path for generated content code")
+	output := flag.String("output", "example/content/fs.go", "Output path for generated content code")
 	flag.Parse()
 
 	// Get content directories
