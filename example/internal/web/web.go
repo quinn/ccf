@@ -19,7 +19,7 @@ var assetsFS embed.FS
 
 func Run() {
 	// Load content before starting server
-	if err := collections.LoadItems[content.Post](content.ContentDir); err != nil {
+	if err := collections.LoadItems[content.Post](content.FS); err != nil {
 		log.Fatalf("failed to load content: %v", err)
 	}
 

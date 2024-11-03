@@ -4,4 +4,4 @@ package content
 import "embed"
 
 //go:embed posts
-var contentFS embed.FS
+var FS embed.FS
