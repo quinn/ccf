@@ -10,6 +10,7 @@ import (
 func RegisterRoutes(e *echo.Echo) {
 	e.GET("/blog/:slug", BlogSlugHandler)
 	e.GET("/", IndexHandler)
+	e.GET("/posts", PostsHandler)
 }
 
 // BlogSlugHandler handles requests to /blog/:slug
@@ -28,4 +29,13 @@ func IndexHandler(c echo.Context) error {
 		return err
 	}
 	return pages.Index(result).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// PostsHandler handles requests to /posts
+func PostsHandler(c echo.Context) error {
+	result, err := pages.PostsHandler(c)
+	if err != nil {
+		return err
+	}
+	return pages.Posts(result).Render(c.Request().Context(), c.Response().Writer)
 }

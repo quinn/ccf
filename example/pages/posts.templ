@@ -1,6 +1,7 @@
 package pages
 
 import (
+	"github.com/labstack/echo/v4"
 	"go.quinn.io/go-astro/example/content"
 	"go.quinn.io/go-astro/internal/assets"
 	collections "go.quinn.io/go-astro/internal/content"
@@ -8,7 +9,7 @@ import (
 
 type Post = content.Post
 
-func PostsHandler() ([]collections.ContentItem[Post], error) {
+func PostsHandler(c echo.Context) ([]collections.ContentItem[Post], error) {
 	// Get items for a specific type
 	return collections.GetItems[Post]()
 }
