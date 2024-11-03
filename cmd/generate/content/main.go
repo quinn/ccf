@@ -6,23 +6,40 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 )
 
+func getContentDirs(contentDir string) ([]string, error) {
+	entries, err := os.ReadDir(contentDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read content directory: %w", err)
+	}
+
+	var dirs []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirs = append(dirs, entry.Name())
+		}
+	}
+	return dirs, nil
+}
+
 func main() {
-	contentDir := flag.String("content", "", "Directory containing content files")
-	output := flag.String("output", "internal/content/generated.go", "Output path for generated content code")
+	output := flag.String("output", "example/content/generated.go", "Output path for generated content code")
 	flag.Parse()
 
-	if *contentDir == "" {
-		log.Fatal("Content directory is required")
+	// Get content directories
+	dirs, err := getContentDirs("example/content")
+	if err != nil {
+		log.Fatalf("Failed to get content directories: %v", err)
 	}
 
 	// Create template data
 	data := struct {
-		ContentDir string
+		Dirs string
 	}{
-		ContentDir: *contentDir,
+		Dirs: strings.Join(dirs, " "),
 	}
 
 	// Read template file

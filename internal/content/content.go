@@ -3,7 +3,6 @@ package content
 import (
 	"fmt"
 	"io/fs"
-	"path/filepath"
 	"reflect"
 	"strings"
 

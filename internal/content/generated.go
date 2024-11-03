@@ -3,5 +3,5 @@ package content
 
 import "embed"
 
-//go:embed {{ .Dirs }}
+//go:embed example/content
 var contentFS embed.FS
