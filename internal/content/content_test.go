@@ -24,7 +24,7 @@ func TestGetItemsWithoutLoading(t *testing.T) {
 
 func TestLoadAndGetItems(t *testing.T) {
 	// Load items first
-	err := LoadItems[Post]("example/content")
+	err := LoadItems[Post]("../../example/content")
 	if err != nil {
 		t.Fatalf("Failed to load items: %v", err)
 	}
@@ -62,6 +62,38 @@ func TestLoadAndGetItems(t *testing.T) {
 
 	if !strings.Contains(item.HTML, "<h2>It is markdown.</h2>") {
 		t.Error("Expected HTML to contain markdown conversion")
+	}
+}
+
+func TestIndex(t *testing.T) {
+	// Load items first
+	err := LoadItems[Post]("../../example/content")
+	if err != nil {
+		t.Fatalf("Failed to load items: %v", err)
+	}
+
+	// Get items for the Post type
+	items, err := GetItems[Post]()
+	if err != nil {
+		t.Fatalf("Failed to get items: %v", err)
+	}
+
+	var post ContentItem[Post]
+
+	// Find the post with the title "Index Post"
+	for _, item := range items {
+		if item.Meta.Title == "Index Post" {
+			post = item
+			break
+		}
+	}
+
+	if post.Meta.Title != "Index Post" {
+		t.Errorf("Expected title 'Index Post', got '%s'", post.Meta.Title)
+	}
+
+	if post.Slug != "2024/test-1-two" {
+		t.Errorf("Expected slug '2024/test-1-two', got '%s'", post.Slug)
 	}
 }
 

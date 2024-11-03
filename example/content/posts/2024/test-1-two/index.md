@@ -1,5 +1,5 @@
 ---
-title: Test 1 2
+title: Index Post
 ---
 
 ## Hello from dir test.

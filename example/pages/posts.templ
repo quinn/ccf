@@ -29,7 +29,7 @@ templ Posts(posts []collections.ContentItem[Post]) {
 				<ul>
 					for _, post := range posts {
 						<li>
-							<a href={ templ.URL("/blog/" + post.Path) }>
+							<a href={ templ.URL("/blog/" + post.Slug) }>
 								{ post.Meta.Title }
 							</a>
 						</li>

@@ -17,7 +17,7 @@ type ContentItem[T any] struct {
 	Meta    T
 	Content string
 	HTML    string
-	Path    string
+	Slug    string
 }
 
 var store = make(map[reflect.Type]any)
@@ -40,6 +40,7 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 // (e.g., Post -> posts).
 func LoadItems[T any](contentDir string) error {
 	t := reflect.TypeOf((*T)(nil)).Elem()
+	delete(store, t)
 
 	// Determine folder name from type name (e.g., Post -> posts)
 	folderName := strings.ToLower(t.Name()) + "s"
@@ -85,7 +86,7 @@ func LoadItems[T any](contentDir string) error {
 			Meta:    reflect.ValueOf(meta).Elem().Interface().(T),
 			Content: string(remainder),
 			HTML:    string(html),
-			Path:    relPath,
+			Slug:    relPath,
 		}
 
 		items = append(items, item)
