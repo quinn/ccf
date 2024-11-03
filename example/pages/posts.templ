@@ -6,12 +6,14 @@ import (
 	collections "go.quinn.io/go-astro/internal/content"
 )
 
-func PostsHandler() ([]collections.ContentItem[content.Post], error) {
+type Post = content.Post
+
+func PostsHandler() ([]collections.ContentItem[Post], error) {
 	// Get items for a specific type
-	return collections.GetItems[content.Post]()
+	return collections.GetItems[Post]()
 }
 
-templ Posts(posts []collections.ContentItem) {
+templ Posts(posts []collections.ContentItem[Post]) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -27,7 +29,6 @@ templ Posts(posts []collections.ContentItem) {
 					for _, post := range posts {
 						<li>
 							<a href={ templ.URL("/blog/" + post.Path) }>
-								// Title is available here because post.Meta is a content.Post
 								{ post.Meta.Title }
 							</a>
 						</li>

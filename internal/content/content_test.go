@@ -1,7 +1,7 @@
 package content
 
 import (
-	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -15,7 +15,7 @@ func TestGetItems(t *testing.T) {
 	// Get items for the Post type
 	items, err := GetItems[Post]()
 	if err != nil {
-		t.Fatalf("Failed to get items: %w", err)
+		t.Fatalf("Failed to get items: %v", err)
 	}
 
 	if len(items) == 0 {
@@ -38,7 +38,12 @@ func TestGetItems(t *testing.T) {
 		t.Errorf("Expected description 'Brief description of some post', got '%s'", post.Description)
 	}
 
-	if item.HTML == "" {
-		t.Error("Expected non-empty HTML content")
+	expectedContent := "This is the content of Some Post.\n\n## It is markdown."
+	if !strings.Contains(item.Content, expectedContent) {
+		t.Errorf("Expected content to contain '%s', got '%s'", expectedContent, item.Content)
+	}
+
+	if !strings.Contains(item.HTML, "<h2>It is markdown.</h2>") {
+		t.Error("Expected HTML to contain markdown conversion")
 	}
 }
