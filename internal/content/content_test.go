@@ -5,32 +5,17 @@ import (
 	"testing"
 )
 
-func TestContentStore(t *testing.T) {
-	store := New()
+type Post struct {
+	Title       string `yaml:"title"`
+	Date        string `yaml:"date"`
+	Description string `yaml:"description"`
+}
 
-	// Discover types from the example config
-	configPath := filepath.Join("..", "..", "example", "content", "config.go")
-	err := store.DiscoverTypes(configPath)
-	if err != nil {
-		t.Fatalf("Failed to discover types: %v", err)
-	}
-
-	// Verify Post type was discovered
-	types := store.GetContentTypes()
-	if len(types) != 1 || types[0] != "Post" {
-		t.Fatalf("Expected to find Post type, got %v", types)
-	}
-
-	// Load content from the example directory
-	err = store.Load("../../example/content")
-	if err != nil {
-		t.Fatalf("Failed to load content: %v", err)
-	}
-
+func TestGetItems(t *testing.T) {
 	// Get items for the Post type
-	items, err := store.GetItems("Post")
+	items, err := GetItems[Post]()
 	if err != nil {
-		t.Fatalf("Failed to get items: %v", err)
+		t.Fatalf("Failed to get items: %w", err)
 	}
 
 	if len(items) == 0 {
@@ -39,14 +24,7 @@ func TestContentStore(t *testing.T) {
 
 	// Check the first item
 	item := items[0]
-	post, ok := item.Meta.(struct {
-		Title       string `yaml:"title"`
-		Date        string `yaml:"date"`
-		Description string `yaml:"description"`
-	})
-	if !ok {
-		t.Fatal("Failed to cast item meta to Post type")
-	}
+	post := item.Meta
 
 	if post.Title != "Some Post" {
 		t.Errorf("Expected title 'Some Post', got '%s'", post.Title)

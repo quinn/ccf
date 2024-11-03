@@ -6,7 +6,7 @@ import (
 	collections "go.quinn.io/go-astro/internal/content"
 )
 
-func PostsHandler() ([]collections.ContentItem, error) {
+func PostsHandler() ([]collections.ContentItem[content.Post], error) {
 	// Get items for a specific type
 	return collections.GetItems[content.Post]()
 }
