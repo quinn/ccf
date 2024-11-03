@@ -3,6 +3,7 @@ package router
 
 import (
 	"github.com/labstack/echo/v4"
+	"go.quinn.io/go-astro/example/pages"
 )
 
 // RegisterRoutes adds all page routes to the Echo instance

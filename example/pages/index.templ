@@ -1,6 +1,9 @@
 package pages
 
-import "github.com/labstack/echo/v4"
+import (
+	"github.com/labstack/echo/v4"
+	"go.quinn.io/go-astro/internal/assets"
+)
 
 func IndexHandler(c echo.Context) ([]map[string]string, error) {
 	return []map[string]string{
@@ -15,8 +18,9 @@ templ Index(posts []map[string]string) {
 		<head>
 			<meta charset="UTF-8"/>
 			<title>Go Astro</title>
+			<link rel="stylesheet" href={ assets.Path("styles.css") }/>
 		</head>
-		<body>
+		<body class="bg-red-500">
 			<h1>Welcome to Go Astro</h1>
 			<p>A Go implementation of Astro-like functionality</p>
 			<nav>

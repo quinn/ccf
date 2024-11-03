@@ -21,7 +21,7 @@ func Run() {
 
 	// Register routes from generated code
 	router.RegisterRoutes(e)
-	assets.AttachAssets(
+	assets.Attach(
 		e,
 		"public",
 		"internal/web/public",

@@ -1,45 +1,66 @@
 version: '3'
+
+vars:
+  BIN_NAME: "example_bin"
+
 tasks:
+  live:templ:
+    cmds:
+      - figlet "Running templ..."
+      - |
+        templ generate \
+          --watch --proxy="http://localhost:3000" \
+          --open-browser=false
+
   live:gen-pages:
     watch: true
     sources:
       - pages/*.go
     cmds:
-      - echo "Generating pages..."
+      - figlet "Generating pages..."
       - |
         go run ../cmd/generate/main.go \
-        -pages pages \
-        -output router/router.go \
-        -package router
-      - templ generate --notify-proxy
+          -pages pages \
+          -output router/router.go \
+          -package router
+      - goimports -w router/router.go
+      - templ generate --notify-proxy || true
 
   live:server:
     watch: true
     sources:
       - "**/*.go"
-      - exclude: "pages/*"
-      - exclude: "router/*"
+      # - exclude: "pages/*"
+      # - exclude: "router/*"
     cmds:
-      - echo "Running server..."
-      - go run main.go
+      - figlet "Running server..."
+      - killall -q {{.BIN_NAME}} || echo "Process was not running."
+      - go build -o ./tmp/{{.BIN_NAME}} main.go
+      - templ generate --notify-proxy || true
+      - ./tmp/{{.BIN_NAME}}
 
   live:tailwind:
     cmds:
-      - echo "Running tailwindcss..."
+      - figlet "Running tailwindcss..."
       - |
         tailwindcss \
           -i ./tailwind.css \
           -o ./internal/web/public/styles.css \
-          --minify --watch
+          --watch
 
   live:assets:
     watch: true
     sources:
       - internal/web/public/styles.css
     cmds:
-      - echo "Generating assets..."
-      - templ generate --notify-proxy
+      - figlet "Generating assets..."
+      - templ generate --notify-proxy || true
 
   live:
     cmds:
-      - task --parallel live:gen-pages live:server live:tailwind live:assets
+      - |
+        task live:templ & \
+        task live:server & \
+        task live:gen-pages & \
+        task live:tailwind & \
+        task live:assets
