@@ -82,7 +82,29 @@ func (s *Store) DiscoverTypes(configPath string) error {
 		}
 
 		// Get the actual type from the package
-		typ := pkg.Scope().Lookup(typeName).Type()
+		obj := pkg.Scope().Lookup(typeName)
+		if obj == nil {
+			continue
+		}
+
+		// Create a new instance of the type using reflection
+		typ := reflect.TypeOf(struct{}{})
+		if named, ok := obj.Type().(*types.Named); ok {
+			if _, ok := named.Underlying().(*types.Struct); ok {
+				// Create a new struct type with the same fields
+				fields := make([]reflect.StructField, 0)
+				for i := 0; i < named.Underlying().(*types.Struct).NumFields(); i++ {
+					field := named.Underlying().(*types.Struct).Field(i)
+					tag := named.Underlying().(*types.Struct).Tag(i)
+					fields = append(fields, reflect.StructField{
+						Name: field.Name(),
+						Type: reflect.TypeOf(""), // Assuming all fields are strings for now
+						Tag:  reflect.StructTag(tag),
+					})
+				}
+				typ = reflect.StructOf(fields)
+			}
+		}
 
 		// Register the type
 		folderName := strings.ToLower(typeName) + "s"
@@ -129,11 +151,11 @@ func (s *Store) Load(baseDir string) error {
 			}
 
 			// Convert markdown to HTML
-			html := markdown.ToHTML([]byte(remainder), nil, nil)
+			html := markdown.ToHTML(remainder, nil, nil)
 
 			item := ContentItem{
 				Meta:    reflect.ValueOf(meta).Elem().Interface(),
-				Content: remainder,
+				Content: string(remainder),
 				HTML:    string(html),
 				Path:    path,
 			}
