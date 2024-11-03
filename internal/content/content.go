@@ -13,17 +13,17 @@ import (
 )
 
 // ContentItem represents a single content item with its metadata and rendered content
-type ContentItem struct {
-	Meta    interface{}
+type ContentItem[T any] struct {
+	Meta    T
 	Content string
 	HTML    string
 	Path    string
 }
 
-var store = make(map[reflect.Type][]ContentItem)
+var store = make(map[reflect.Type]any)
 
 // GetItems returns all content items for a given type T
-func GetItems[T any]() ([]ContentItem, error) {
+func GetItems[T any]() ([]ContentItem[T], error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
 	// If items haven't been loaded yet, load them
@@ -33,7 +33,8 @@ func GetItems[T any]() ([]ContentItem, error) {
 		}
 	}
 
-	return store[t], nil
+	items, _ := store[t].([]ContentItem[T])
+	return items, nil
 }
 
 // loadItems loads all content items for a given type T
@@ -49,7 +50,7 @@ func loadItems[T any]() error {
 		return nil
 	}
 
-	var items []ContentItem
+	var items []ContentItem[T]
 
 	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -80,8 +81,8 @@ func loadItems[T any]() error {
 		// Get relative path without extension for routing
 		relPath := strings.TrimSuffix(strings.TrimPrefix(path, contentDir+"/"), ".md")
 
-		item := ContentItem{
-			Meta:    reflect.ValueOf(meta).Elem().Interface(),
+		item := ContentItem[T]{
+			Meta:    reflect.ValueOf(meta).Elem().Interface().(T),
 			Content: string(remainder),
 			HTML:    string(html),
 			Path:    relPath,
