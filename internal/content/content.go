@@ -33,10 +33,10 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 	return items, nil
 }
 
-// LoadItems loads all content items for a given type T from the specified content directory.
+// LoadItems loads all content items for a given type T from the provided filesystem.
 // The items will be loaded from a subdirectory matching the lowercase type name + "s"
 // (e.g., Post -> posts).
-func LoadItems[T any](_ string) error {
+func LoadItems[T any](fsys fs.FS) error {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	delete(store, t)
 
@@ -45,7 +45,7 @@ func LoadItems[T any](_ string) error {
 
 	var items []ContentItem[T]
 
-	err := fs.WalkDir(contentFS, folderName, func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, folderName, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if d == nil {
 				return nil // Skip if directory doesn't exist
@@ -57,7 +57,7 @@ func LoadItems[T any](_ string) error {
 			return nil
 		}
 
-		content, err := fs.ReadFile(contentFS, path)
+		content, err := fs.ReadFile(fsys, path)
 		if err != nil {
 			return fmt.Errorf("failed to read content file %s: %w", path, err)
 		}
