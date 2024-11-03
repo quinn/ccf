@@ -1,14 +1,39 @@
 package content
 
 import (
+	"io/fs"
 	"strings"
 	"testing"
+	"testing/fstest"
 )
 
 type Post struct {
 	Title       string `yaml:"title"`
 	Description string `yaml:"description"`
 	Date        string `yaml:"date"`
+}
+
+func setupTestFS() fs.FS {
+	return fstest.MapFS{
+		"posts/2014/some-post.md": &fstest.MapFile{
+			Data: []byte(`---
+title: Some Post
+date: 2014-01-06
+description: Brief description of some post
+---
+This is the content of Some Post.
+
+## It is markdown.`),
+		},
+		"posts/2024/test-1-two/index.md": &fstest.MapFile{
+			Data: []byte(`---
+title: Index Post
+date: 2024-01-01
+description: Test index post
+---
+This is an index post.`),
+		},
+	}
 }
 
 func TestGetItemsWithoutLoading(t *testing.T) {
@@ -23,8 +48,10 @@ func TestGetItemsWithoutLoading(t *testing.T) {
 }
 
 func TestLoadAndGetItems(t *testing.T) {
+	fsys := setupTestFS()
+
 	// Load items first
-	err := LoadItems[Post]("../../example/content")
+	err := LoadItems[Post](fsys)
 	if err != nil {
 		t.Fatalf("Failed to load items: %v", err)
 	}
@@ -66,8 +93,10 @@ func TestLoadAndGetItems(t *testing.T) {
 }
 
 func TestIndex(t *testing.T) {
+	fsys := setupTestFS()
+
 	// Load items first
-	err := LoadItems[Post]("../../example/content")
+	err := LoadItems[Post](fsys)
 	if err != nil {
 		t.Fatalf("Failed to load items: %v", err)
 	}
@@ -98,16 +127,18 @@ func TestIndex(t *testing.T) {
 }
 
 func TestLoadItemsNonexistentDirectory(t *testing.T) {
-	err := LoadItems[Post]("nonexistent")
+	fsys := fstest.MapFS{}
+
+	err := LoadItems[Post](fsys)
 	if err != nil {
-		t.Fatal("Expected no error when loading from nonexistent directory")
+		t.Fatal("Expected no error when loading from empty filesystem")
 	}
 
 	items, err := GetItems[Post]()
 	if err == nil {
-		t.Fatal("Expected error when getting items after loading from nonexistent directory")
+		t.Fatal("Expected error when getting items after loading from empty filesystem")
 	}
 	if items != nil {
-		t.Fatal("Expected nil items when getting items after loading from nonexistent directory")
+		t.Fatal("Expected nil items when getting items after loading from empty filesystem")
 	}
 }
