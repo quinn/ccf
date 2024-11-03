@@ -1,0 +1,39 @@
+package pages
+
+import (
+	"go.quinn.io/go-astro/example/content"
+	"go.quinn.io/go-astro/internal/assets"
+	astrocontent "go.quinn.io/go-astro/internal/content"
+)
+
+func PostsHandler() ([]astrocontent.ContentItem, error) {
+	// Get items for a specific type
+	return astrocontent.GetItems[content.Post]("Post")
+}
+
+templ Posts(posts []astrocontent.ContentItem) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<title>Go Astro</title>
+			<link rel="stylesheet" href={ assets.Path("styles.css") }/>
+		</head>
+		<body class="bg-red-500">
+			<h1>Welcome to Go Astro</h1>
+			<p>A Go implementation of Astro-like functionality</p>
+			<nav>
+				<ul>
+					for _, post := range posts {
+						<li>
+							<a href={ templ.URL("/blog/" + post.Path) }>
+								// Title is available here because post.Meta is a content.Post
+								{ post.Meta.Title }
+							</a>
+						</li>
+					}
+				</ul>
+			</nav>
+		</body>
+	</html>
+}
