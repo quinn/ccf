@@ -7,11 +7,28 @@ import (
 
 type Post struct {
 	Title       string `yaml:"title"`
-	Date        string `yaml:"date"`
 	Description string `yaml:"description"`
+	Date        string `yaml:"date"`
 }
 
-func TestGetItems(t *testing.T) {
+func TestGetItemsWithoutLoading(t *testing.T) {
+	// Try to get items without loading first
+	items, err := GetItems[Post]()
+	if err == nil {
+		t.Fatal("Expected error when getting items without loading first")
+	}
+	if items != nil {
+		t.Fatal("Expected nil items when getting items without loading first")
+	}
+}
+
+func TestLoadAndGetItems(t *testing.T) {
+	// Load items first
+	err := LoadItems[Post]("example/content")
+	if err != nil {
+		t.Fatalf("Failed to load items: %v", err)
+	}
+
 	// Get items for the Post type
 	items, err := GetItems[Post]()
 	if err != nil {
@@ -45,5 +62,20 @@ func TestGetItems(t *testing.T) {
 
 	if !strings.Contains(item.HTML, "<h2>It is markdown.</h2>") {
 		t.Error("Expected HTML to contain markdown conversion")
+	}
+}
+
+func TestLoadItemsNonexistentDirectory(t *testing.T) {
+	err := LoadItems[Post]("nonexistent")
+	if err != nil {
+		t.Fatal("Expected no error when loading from nonexistent directory")
+	}
+
+	items, err := GetItems[Post]()
+	if err == nil {
+		t.Fatal("Expected error when getting items after loading from nonexistent directory")
+	}
+	if items != nil {
+		t.Fatal("Expected nil items when getting items after loading from nonexistent directory")
 	}
 }

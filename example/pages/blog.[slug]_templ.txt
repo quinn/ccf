@@ -1,4 +1,0 @@
-<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Blog Post: 
-</title></head><body><h1>Blog Post: 
-</h1><p>This is a dynamic blog post page with slug: 
-</p></body></html>
