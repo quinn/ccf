@@ -3,7 +3,6 @@ package content
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -38,23 +37,20 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 // LoadItems loads all content items for a given type T from the specified content directory.
 // The items will be loaded from a subdirectory matching the lowercase type name + "s"
 // (e.g., Post -> posts).
-func LoadItems[T any](contentDir string) error {
+func LoadItems[T any](_ string) error {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	delete(store, t)
 
 	// Determine folder name from type name (e.g., Post -> posts)
 	folderName := strings.ToLower(t.Name()) + "s"
-	fullPath := filepath.Join(contentDir, folderName)
-
-	// Skip if directory doesn't exist
-	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-		return nil
-	}
 
 	var items []ContentItem[T]
 
-	err := filepath.WalkDir(fullPath, func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(contentFS, folderName, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
+			if d == nil {
+				return nil // Skip if directory doesn't exist
+			}
 			return fmt.Errorf("failed to walk directory: %w", err)
 		}
 
@@ -62,7 +58,7 @@ func LoadItems[T any](contentDir string) error {
 			return nil
 		}
 
-		content, err := os.ReadFile(path)
+		content, err := fs.ReadFile(contentFS, path)
 		if err != nil {
 			return fmt.Errorf("failed to read content file %s: %w", path, err)
 		}
@@ -80,7 +76,7 @@ func LoadItems[T any](contentDir string) error {
 		html := markdown.ToHTML(remainder, nil, nil)
 
 		// Get relative path without extension for routing
-		relPath := strings.TrimSuffix(strings.TrimPrefix(path, fullPath+"/"), ".md")
+		relPath := strings.TrimSuffix(strings.TrimPrefix(path, folderName+"/"), ".md")
 
 		// Handle index files by removing the /index suffix
 		if strings.HasSuffix(relPath, "/index") {
