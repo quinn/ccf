@@ -82,6 +82,11 @@ func LoadItems[T any](contentDir string) error {
 		// Get relative path without extension for routing
 		relPath := strings.TrimSuffix(strings.TrimPrefix(path, fullPath+"/"), ".md")
 
+		// Handle index files by removing the /index suffix
+		if strings.HasSuffix(relPath, "/index") {
+			relPath = strings.TrimSuffix(relPath, "/index")
+		}
+
 		item := ContentItem[T]{
 			Meta:    reflect.ValueOf(meta).Elem().Interface().(T),
 			Content: string(remainder),
