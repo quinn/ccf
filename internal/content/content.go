@@ -22,39 +22,39 @@ type ContentItem[T any] struct {
 
 var store = make(map[reflect.Type]any)
 
-// GetItems returns all content items for a given type T
+// GetItems returns all content items for a given type T.
+// LoadItems must be called first to populate the store.
 func GetItems[T any]() ([]ContentItem[T], error) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
-	// If items haven't been loaded yet, load them
-	if _, ok := store[t]; !ok {
-		if err := loadItems[T](); err != nil {
-			return nil, fmt.Errorf("failed to load items: %w", err)
-		}
+	items, ok := store[t].([]ContentItem[T])
+	if !ok {
+		return nil, fmt.Errorf("no items found for type %v, ensure LoadItems was called", t)
 	}
 
-	items, _ := store[t].([]ContentItem[T])
 	return items, nil
 }
 
-// loadItems loads all content items for a given type T
-func loadItems[T any]() error {
+// LoadItems loads all content items for a given type T from the specified content directory.
+// The items will be loaded from a subdirectory matching the lowercase type name + "s"
+// (e.g., Post -> posts).
+func LoadItems[T any](contentDir string) error {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 
 	// Determine folder name from type name (e.g., Post -> posts)
 	folderName := strings.ToLower(t.Name()) + "s"
-	contentDir := filepath.Join("content", folderName)
+	fullPath := filepath.Join(contentDir, folderName)
 
 	// Skip if directory doesn't exist
-	if _, err := os.Stat(contentDir); os.IsNotExist(err) {
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
 		return nil
 	}
 
 	var items []ContentItem[T]
 
-	err := filepath.WalkDir(contentDir, func(path string, d fs.DirEntry, err error) error {
+	err := filepath.WalkDir(fullPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to walk directory: %w", err)
 		}
 
 		if d.IsDir() || !strings.HasSuffix(d.Name(), ".md") {
@@ -79,7 +79,7 @@ func loadItems[T any]() error {
 		html := markdown.ToHTML(remainder, nil, nil)
 
 		// Get relative path without extension for routing
-		relPath := strings.TrimSuffix(strings.TrimPrefix(path, contentDir+"/"), ".md")
+		relPath := strings.TrimSuffix(strings.TrimPrefix(path, fullPath+"/"), ".md")
 
 		item := ContentItem[T]{
 			Meta:    reflect.ValueOf(meta).Elem().Interface().(T),
