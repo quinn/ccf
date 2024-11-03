@@ -1,0 +1,41 @@
+version: '3'
+tasks:
+  live:gen-pages:
+    watch: true
+    sources:
+      - pages/*.go
+    cmds:
+      - |
+        go run ../cmd/generate/main.go \
+        -pages pages \
+        -output router/router.go \
+        -package router
+      - templ generate --notify-proxy
+
+  live:server:
+    watch: true
+    sources:
+      - "**/*.go"
+      - exclude: "pages/*"
+      - exclude: "router/*"
+    cmds:
+      - go run main.go
+
+  live:tailwind:
+    cmds:
+      - |
+        tailwindcss \
+          -i ./tailwind.css \
+          -o ./internal/web/public/styles.css \
+          --minify --watch
+
+  live:assets:
+    watch: true
+    sources:
+      - internal/web/public/styles.css
+    cmds:
+      - templ generate --notify-proxy
+
+  example:run:
+    cmds:
+      - cd example && go run main.go
