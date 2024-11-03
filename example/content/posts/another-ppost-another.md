@@ -1,5 +1,5 @@
 ---
-title: Dis is Da Title :(
+title: Dis is Da Titel
 ---
 
 ## Wow a blahhhhg post!

@@ -30,6 +30,7 @@ tasks:
     watch: true
     sources:
       - "**/*.go"
+      - "content/**/*"
       # - exclude: "pages/*"
       # - exclude: "router/*"
     cmds:
