@@ -1,0 +1,18 @@
+version: '3'
+
+tasks:
+  one:
+    watch: true
+    sources:
+      - one.txt
+    cmds:
+      - figlet One
+  two:
+    watch: true
+    sources:
+      - two.txt
+    cmds:
+      - figlet Two
+  three:
+    cmds:
+      - tailwindcss --watch -o test.css

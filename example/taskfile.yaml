@@ -64,3 +64,7 @@ tasks:
         task live:gen-pages & \
         task live:tailwind & \
         task live:assets
+
+  live-doesnt-work:
+    cmds:
+      - task -vp live:templ live:server live:gen-pages live:tailwind live:assets
