@@ -1,3 +1,5 @@
+// This file is part of the spec for the content package.
+// it should not be modified.
 package content
 
 // ContentDir is the root directory for content files
