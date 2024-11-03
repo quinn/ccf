@@ -2,6 +2,9 @@ package content
 
 import (
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -39,20 +42,54 @@ func New() *Store {
 	}
 }
 
-// RegisterType registers a new content type based on a struct
-func (s *Store) RegisterType(example interface{}) error {
-	t := reflect.TypeOf(example)
-	if t.Kind() != reflect.Struct {
-		return fmt.Errorf("content type must be a struct")
+// DiscoverTypes uses reflection to discover content types from a config file
+func (s *Store) DiscoverTypes(configPath string) error {
+	// Parse the Go file
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, configPath, nil, parser.ParseComments)
+	if err != nil {
+		return fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	// Get the type name and convert to lowercase for folder name
-	typeName := t.Name()
-	folderName := strings.ToLower(typeName) + "s"
+	// Get package path for the config file
+	pkgPath := filepath.Dir(configPath)
 
-	s.types[typeName] = &ContentType{
-		Type:       t,
-		FolderName: folderName,
+	// Create a map to store type definitions
+	typeSpecs := make(map[string]*ast.TypeSpec)
+
+	// Find all type declarations
+	for _, decl := range node.Decls {
+		if genDecl, ok := decl.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+			for _, spec := range genDecl.Specs {
+				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+					typeSpecs[typeSpec.Name.Name] = typeSpec
+				}
+			}
+		}
+	}
+
+	// Load the package using go/types
+	pkg, err := loadPackage(pkgPath)
+	if err != nil {
+		return fmt.Errorf("failed to load package: %w", err)
+	}
+
+	// Register each type
+	for typeName, typeSpec := range typeSpecs {
+		// Skip if not a struct
+		if _, ok := typeSpec.Type.(*ast.StructType); !ok {
+			continue
+		}
+
+		// Get the actual type from the package
+		typ := pkg.Scope().Lookup(typeName).Type()
+
+		// Register the type
+		folderName := strings.ToLower(typeName) + "s"
+		s.types[typeName] = &ContentType{
+			Type:       typ,
+			FolderName: folderName,
+		}
 	}
 
 	return nil
@@ -113,17 +150,21 @@ func (s *Store) Load(baseDir string) error {
 	return nil
 }
 
-// GetItems returns all items for a given content type
-func (s *Store) GetItems(contentType interface{}) ([]ContentItem, error) {
-	t := reflect.TypeOf(contentType)
-	if t.Kind() != reflect.Struct {
-		return nil, fmt.Errorf("content type must be a struct")
-	}
-
-	ct, ok := s.types[t.Name()]
+// GetItems returns all items for a given content type name
+func (s *Store) GetItems(typeName string) ([]ContentItem, error) {
+	ct, ok := s.types[typeName]
 	if !ok {
-		return nil, fmt.Errorf("content type %s not registered", t.Name())
+		return nil, fmt.Errorf("content type %s not registered", typeName)
 	}
 
 	return ct.Items, nil
+}
+
+// GetContentTypes returns all registered content type names
+func (s *Store) GetContentTypes() []string {
+	types := make([]string, 0, len(s.types))
+	for typeName := range s.types {
+		types = append(types, typeName)
+	}
+	return types
 }
