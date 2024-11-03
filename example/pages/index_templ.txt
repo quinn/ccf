@@ -1,0 +1,6 @@
+<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Go Astro</title><link rel=\"stylesheet\" href=\"
+\"></head><body class=\"bg-red-500\"><h1>Welcome to Go Astro</h1><p>A Go implementation of Astro-like functionality</p><nav><ul>
+<li><a href=\"
+\">
+</a></li>
+</ul></nav></body></html>
