@@ -5,6 +5,7 @@ tasks:
     sources:
       - pages/*.go
     cmds:
+      - echo "Generating pages..."
       - |
         go run ../cmd/generate/main.go \
         -pages pages \
@@ -19,10 +20,12 @@ tasks:
       - exclude: "pages/*"
       - exclude: "router/*"
     cmds:
+      - echo "Running server..."
       - go run main.go
 
   live:tailwind:
     cmds:
+      - echo "Running tailwindcss..."
       - |
         tailwindcss \
           -i ./tailwind.css \
@@ -34,8 +37,9 @@ tasks:
     sources:
       - internal/web/public/styles.css
     cmds:
+      - echo "Generating assets..."
       - templ generate --notify-proxy
 
-  example:run:
+  live:
     cmds:
-      - cd example && go run main.go
+      - task --parallel live:gen-pages live:server live:tailwind live:assets
