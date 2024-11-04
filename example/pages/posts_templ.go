@@ -12,17 +12,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.quinn.io/go-astro/example/content"
 	"go.quinn.io/go-astro/internal/assets"
-	collections "go.quinn.io/go-astro/internal/content"
 )
 
-type Post = content.Post
-
-func PostsHandler(c echo.Context) ([]collections.ContentItem[Post], error) {
+func PostsHandler(c echo.Context) ([]content.PostItem, error) {
 	// Get items for a specific type
-	return collections.GetItems[Post]()
+	return content.GetPosts()
 }
 
-func Posts(posts []collections.ContentItem[Post]) templ.Component {
+func Posts(posts []content.PostItem) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -50,7 +47,7 @@ func Posts(posts []collections.ContentItem[Post]) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(assets.Path("styles.css"))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/posts.templ`, Line: 23, Col: 58}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/posts.templ`, Line: 20, Col: 58}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -77,7 +74,7 @@ func Posts(posts []collections.ContentItem[Post]) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(post.Meta.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/posts.templ`, Line: 33, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `pages/posts.templ`, Line: 30, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
