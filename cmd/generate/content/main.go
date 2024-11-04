@@ -56,6 +56,10 @@ func getContentDirs(contentDir string) ([]string, error) {
 	return dirs, nil
 }
 
+var templateFuncs = template.FuncMap{
+	"lower": strings.ToLower,
+}
+
 func main() {
 	output := flag.String("output", "example/content/fs.go", "Output path for generated content code")
 	flag.Parse()
@@ -82,7 +86,7 @@ func main() {
 	}
 
 	// Read template file
-	tmpl, err := template.ParseFiles("internal/codegen/templates/content.gotmpl")
+	tmpl, err := template.New("content.gotmpl").Funcs(templateFuncs).ParseFiles("internal/codegen/templates/content.gotmpl")
 	if err != nil {
 		log.Fatalf("Failed to parse template: %v", err)
 	}

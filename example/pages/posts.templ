@@ -4,17 +4,14 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.quinn.io/go-astro/example/content"
 	"go.quinn.io/go-astro/internal/assets"
-	collections "go.quinn.io/go-astro/internal/content"
 )
 
-type Post = content.Post
-
-func PostsHandler(c echo.Context) ([]collections.ContentItem[Post], error) {
+func PostsHandler(c echo.Context) ([]content.PostItem, error) {
 	// Get items for a specific type
-	return collections.GetItems[Post]()
+	return content.GetPosts()
 }
 
-templ Posts(posts []collections.ContentItem[Post]) {
+templ Posts(posts []content.PostItem) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
