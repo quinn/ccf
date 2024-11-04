@@ -11,7 +11,6 @@ import (
 	"go.quinn.io/go-astro/example/content"
 	"go.quinn.io/go-astro/example/router"
 	"go.quinn.io/go-astro/internal/assets"
-	collections "go.quinn.io/go-astro/internal/content"
 )
 
 //go:embed public
@@ -19,15 +18,15 @@ var assetsFS embed.FS
 
 func Run() {
 	// Load content before starting server
-	if err := collections.LoadItems[content.Post](content.FS); err != nil {
-		log.Fatalf("failed to load content: %v", err)
-	}
+	content.Initialize()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
 
 	// Register routes from generated code
 	router.RegisterRoutes(e)
+
+	// Attach public assets
 	assets.Attach(
 		e,
 		"public",

@@ -19,11 +19,21 @@ tasks:
     cmds:
       - figlet "Generating pages..."
       - |
-        go run ../cmd/generate/main.go \
+        go run ../cmd/generate/pages/main.go \
           -pages pages \
           -output router/router.go \
           -package router
       - goimports -w router/router.go
+      - templ generate --notify-proxy || true
+
+  live:gen-content:
+    watch: true
+    sources:
+      - content/**/*
+    cmds:
+      - figlet "Generating content..."
+      - |
+        go run ../cmd/generate/content/main.go \
       - templ generate --notify-proxy || true
 
   live:server:
