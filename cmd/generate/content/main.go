@@ -61,17 +61,21 @@ var templateFuncs = template.FuncMap{
 }
 
 func main() {
-	output := flag.String("output", "example/content/fs.go", "Output path for generated content code")
+	contentDir := flag.String("content", "", "Path to content directory")
 	flag.Parse()
 
+	if *contentDir == "" {
+		log.Fatal("Content directory path is required")
+	}
+
 	// Get content types from config
-	types, err := parseContentTypes("example/content/config.go")
+	types, err := parseContentTypes(filepath.Join(*contentDir, "config.go"))
 	if err != nil {
 		log.Fatalf("Failed to parse content types: %v", err)
 	}
 
 	// Get content directories
-	dirs, err := getContentDirs("example/content")
+	dirs, err := getContentDirs(*contentDir)
 	if err != nil {
 		log.Fatalf("Failed to get content directories: %v", err)
 	}
@@ -91,13 +95,16 @@ func main() {
 		log.Fatalf("Failed to parse template: %v", err)
 	}
 
+	// Set output path relative to content directory
+	output := filepath.Join(*contentDir, "fs.go")
+
 	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(*output), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
 		log.Fatalf("Failed to create output directory: %v", err)
 	}
 
 	// Create output file
-	f, err := os.Create(*output)
+	f, err := os.Create(output)
 	if err != nil {
 		log.Fatalf("Failed to create output file: %v", err)
 	}
@@ -107,5 +114,5 @@ func main() {
 		log.Fatalf("Failed to execute template: %v", err)
 	}
 
-	fmt.Printf("Successfully generated content code at %s\n", *output)
+	fmt.Printf("Successfully generated content code at %s\n", output)
 }

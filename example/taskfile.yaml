@@ -32,8 +32,7 @@ tasks:
       - content/**/*
     cmds:
       - figlet "Generating content..."
-      - |
-        go run ../cmd/generate/content/main.go \
+      - go run ../cmd/generate/content/main.go -content content
       - templ generate --notify-proxy || true
 
   live:server:
