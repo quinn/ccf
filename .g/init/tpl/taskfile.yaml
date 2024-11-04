@@ -1,0 +1,78 @@
+version: '3'
+
+vars:
+  BIN_NAME: "example_bin"
+
+tasks:
+  live:templ:
+    cmds:
+      - figlet "Running templ..."
+      - |
+        templ generate \
+          --watch --proxy="http://localhost:3000" \
+          --open-browser=false
+
+  live:gen-pages:
+    watch: true
+    sources:
+      - pages/*.go
+    cmds:
+      - figlet "Generating pages..."
+      - |
+        go run go.quinn.io/cmd/generate/pages@latest \
+          -pages pages \
+          -output router/router.go \
+          -package router
+      - goimports -w router/router.go
+
+  live:gen-content:
+    watch: true
+    sources:
+      - content/**/*
+      - exclude: content/fs.go
+    cmds:
+      - figlet "Generating content..."
+      - |
+        go run go.quinn.io/cmd/generate/content@latest \
+          -content content
+
+  live:server:
+    watch: true
+    sources:
+      - "**/*.go"
+    cmds:
+      - figlet "Running server..."
+      - killall -q {{.BIN_NAME}} || echo "Process was not running."
+      - go build -o ./tmp/{{.BIN_NAME}} main.go
+      - templ generate --notify-proxy || true
+      - ./tmp/{{.BIN_NAME}}
+
+  live:tailwind:
+    cmds:
+      - figlet "Running tailwindcss..."
+      - |
+        tailwindcss \
+          -i ./tailwind.css \
+          -o ./internal/web/public/styles.css \
+          --watch
+
+  live:assets:
+    watch: true
+    sources:
+      - internal/web/public/styles.css
+    cmds:
+      - figlet "Generating assets..."
+      - templ generate --notify-proxy || true
+
+  live:
+    cmds:
+      - |
+        task live:templ & \
+        task live:server & \
+        task live:gen-pages & \
+        task live:tailwind & \
+        task live:assets
+
+  live-doesnt-work:
+    cmds:
+      - task -vp live:templ live:server live:gen-pages live:tailwind live:assets
