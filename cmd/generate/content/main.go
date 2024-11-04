@@ -3,62 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"log"
-	"os"
-	"path/filepath"
-	"strings"
-	"text/template"
+
+	"github.com/quinn/go-astro/internal/codegen"
 )
-
-type ContentType struct {
-	Name   string
-	Fields []*ast.Field
-}
-
-func parseContentTypes(configPath string) ([]ContentType, error) {
-	fset := token.NewFileSet()
-	node, err := parser.ParseFile(fset, configPath, nil, parser.ParseComments)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse config file: %w", err)
-	}
-
-	var types []ContentType
-	ast.Inspect(node, func(n ast.Node) bool {
-		if typeSpec, ok := n.(*ast.TypeSpec); ok {
-			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-				types = append(types, ContentType{
-					Name:   typeSpec.Name.Name,
-					Fields: structType.Fields.List,
-				})
-			}
-		}
-		return true
-	})
-
-	return types, nil
-}
-
-func getContentDirs(contentDir string) ([]string, error) {
-	entries, err := os.ReadDir(contentDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read content directory: %w", err)
-	}
-
-	var dirs []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			dirs = append(dirs, entry.Name())
-		}
-	}
-	return dirs, nil
-}
-
-var templateFuncs = template.FuncMap{
-	"lower": strings.ToLower,
-}
 
 func main() {
 	contentDir := flag.String("content", "", "Path to content directory")
@@ -68,51 +16,10 @@ func main() {
 		log.Fatal("Content directory path is required")
 	}
 
-	// Get content types from config
-	types, err := parseContentTypes(filepath.Join(*contentDir, "config.go"))
-	if err != nil {
-		log.Fatalf("Failed to parse content types: %v", err)
+	generator := codegen.NewContentGenerator(*contentDir)
+	if err := generator.Generate(); err != nil {
+		log.Fatalf("Failed to generate content: %v", err)
 	}
 
-	// Get content directories
-	dirs, err := getContentDirs(*contentDir)
-	if err != nil {
-		log.Fatalf("Failed to get content directories: %v", err)
-	}
-
-	// Create template data
-	data := struct {
-		Types []ContentType
-		Dirs  string
-	}{
-		Types: types,
-		Dirs:  strings.Join(dirs, " "),
-	}
-
-	// Read template file
-	tmpl, err := template.New("content.gotmpl").Funcs(templateFuncs).ParseFiles("internal/codegen/templates/content.gotmpl")
-	if err != nil {
-		log.Fatalf("Failed to parse template: %v", err)
-	}
-
-	// Set output path relative to content directory
-	output := filepath.Join(*contentDir, "fs.go")
-
-	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(output), 0755); err != nil {
-		log.Fatalf("Failed to create output directory: %v", err)
-	}
-
-	// Create output file
-	f, err := os.Create(output)
-	if err != nil {
-		log.Fatalf("Failed to create output file: %v", err)
-	}
-	defer f.Close()
-
-	if err := tmpl.Execute(f, data); err != nil {
-		log.Fatalf("Failed to execute template: %v", err)
-	}
-
-	fmt.Printf("Successfully generated content code at %s\n", output)
+	fmt.Printf("Successfully generated content code at %s/fs.go\n", *contentDir)
 }
