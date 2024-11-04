@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/internal/assets"
+	"go.quinn.io/go-astro/assets"
 )
 
 func IndexHandler(c echo.Context) ([]map[string]string, error) {

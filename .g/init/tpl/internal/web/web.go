@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"go.quinn.io/go-astro/internal/assets"
+	"go.quinn.io/go-astro/assets"
 	"{{ .name }}/content"
 	"{{ .name }}/router"
 )

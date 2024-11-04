@@ -2,8 +2,8 @@ package pages
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/internal/assets"
-	"{{ .name }}/content"
+	"go.quinn.io/go-astro/assets"
+	"{{ .mod }}/content"
 )
 
 func IndexHandler(c echo.Context) ([]content.PostItem, error) {
