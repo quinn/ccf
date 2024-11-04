@@ -22,3 +22,7 @@ func GetPosts[T any]() ([]content.ContentItem[T], error) {
 	return content.GetItems[T]()
 }
 
+// GetFS returns the embedded filesystem containing all content.
+func GetFS() fs.FS {
+	return FS
+}
