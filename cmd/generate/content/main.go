@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/quinn/go-astro/internal/codegen"
+	"go.quinn.io/go-astro/internal/codegen"
 )
 
 func main() {

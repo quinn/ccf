@@ -24,24 +24,22 @@ tasks:
           -output router/router.go \
           -package router
       - goimports -w router/router.go
-      - templ generate --notify-proxy || true
+      # - templ generate --notify-proxy || true
 
   live:gen-content:
     watch: true
     sources:
       - content/**/*
+      - exclude: content/fs.go
     cmds:
       - figlet "Generating content..."
       - go run ../cmd/generate/content/main.go -content content
-      - templ generate --notify-proxy || true
+      # - templ generate --notify-proxy || true
 
   live:server:
     watch: true
     sources:
       - "**/*.go"
-      - "content/**/*"
-      # - exclude: "pages/*"
-      # - exclude: "router/*"
     cmds:
       - figlet "Running server..."
       - killall -q {{.BIN_NAME}} || echo "Process was not running."
