@@ -3,6 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,65 +13,34 @@ import (
 	"text/template"
 )
 
-// ContentLoader handles loading and managing content types
-type ContentLoader struct {
-	contentDir string
-	dirs       []string
+type ContentType struct {
+	Name   string
+	Fields []*ast.Field
 }
 
-// NewContentLoader initializes a new ContentLoader with the given content directory
-func NewContentLoader(contentDir string) (*ContentLoader, error) {
-	dirs, err := getContentDirs(contentDir)
+func parseContentTypes(configPath string) ([]ContentType, error) {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, configPath, nil, parser.ParseComments)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize content loader: %w", err)
+		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	return &ContentLoader{
-		contentDir: contentDir,
-		dirs:       dirs,
-	}, nil
+	var types []ContentType
+	ast.Inspect(node, func(n ast.Node) bool {
+		if typeSpec, ok := n.(*ast.TypeSpec); ok {
+			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+				types = append(types, ContentType{
+					Name:   typeSpec.Name.Name,
+					Fields: structType.Fields.List,
+				})
+			}
+		}
+		return true
+	})
+
+	return types, nil
 }
 
-// GetContentTypes returns all available content type directories
-func (cl *ContentLoader) GetContentTypes() []string {
-	return cl.dirs
-}
-
-// GenerateCode generates the content filesystem code
-func (cl *ContentLoader) GenerateCode(outputPath string) error {
-	// Create template data
-	data := struct {
-		Dirs string
-	}{
-		Dirs: strings.Join(cl.dirs, " "),
-	}
-
-	// Read template file
-	tmpl, err := template.ParseFiles("internal/codegen/templates/content.gotmpl")
-	if err != nil {
-		return fmt.Errorf("failed to parse template: %w", err)
-	}
-
-	// Create output directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(outputPath), 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
-
-	// Create output file
-	f, err := os.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
-	}
-	defer f.Close()
-
-	if err := tmpl.Execute(f, data); err != nil {
-		return fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	return nil
-}
-
-// getContentDirs returns a list of content type directories
 func getContentDirs(contentDir string) ([]string, error) {
 	entries, err := os.ReadDir(contentDir)
 	if err != nil {
@@ -88,13 +60,47 @@ func main() {
 	output := flag.String("output", "example/content/fs.go", "Output path for generated content code")
 	flag.Parse()
 
-	loader, err := NewContentLoader("example/content")
+	// Get content types from config
+	types, err := parseContentTypes("example/content/config.go")
 	if err != nil {
-		log.Fatalf("Failed to initialize content loader: %v", err)
+		log.Fatalf("Failed to parse content types: %v", err)
 	}
 
-	if err := loader.GenerateCode(*output); err != nil {
-		log.Fatalf("Failed to generate content code: %v", err)
+	// Get content directories
+	dirs, err := getContentDirs("example/content")
+	if err != nil {
+		log.Fatalf("Failed to get content directories: %v", err)
+	}
+
+	// Create template data
+	data := struct {
+		Types []ContentType
+		Dirs  string
+	}{
+		Types: types,
+		Dirs:  strings.Join(dirs, " "),
+	}
+
+	// Read template file
+	tmpl, err := template.ParseFiles("internal/codegen/templates/content.gotmpl")
+	if err != nil {
+		log.Fatalf("Failed to parse template: %v", err)
+	}
+
+	// Create output directory if it doesn't exist
+	if err := os.MkdirAll(filepath.Dir(*output), 0755); err != nil {
+		log.Fatalf("Failed to create output directory: %v", err)
+	}
+
+	// Create output file
+	f, err := os.Create(*output)
+	if err != nil {
+		log.Fatalf("Failed to create output file: %v", err)
+	}
+	defer f.Close()
+
+	if err := tmpl.Execute(f, data); err != nil {
+		log.Fatalf("Failed to execute template: %v", err)
 	}
 
 	fmt.Printf("Successfully generated content code at %s\n", *output)
