@@ -34,18 +34,14 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 }
 
 // LoadItems loads all content items for a given type T from the provided filesystem.
-// The items will be loaded from a subdirectory matching the lowercase type name + "s"
-// (e.g., Post -> posts).
-func LoadItems[T any](fsys fs.FS) error {
+// The items will be loaded from the specified directory.
+func LoadItems[T any](fsys fs.FS, dirName string) error {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	delete(store, t)
 
-	// Determine folder name from type name (e.g., Post -> posts)
-	folderName := strings.ToLower(t.Name()) + "s"
-
 	var items []ContentItem[T]
 
-	err := fs.WalkDir(fsys, folderName, func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, dirName, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			if d == nil {
 				return nil // Skip if directory doesn't exist
@@ -75,7 +71,7 @@ func LoadItems[T any](fsys fs.FS) error {
 		html := markdown.ToHTML(remainder, nil, nil)
 
 		// Get relative path without extension for routing
-		relPath := strings.TrimSuffix(strings.TrimPrefix(path, folderName+"/"), ".md")
+		relPath := strings.TrimSuffix(strings.TrimPrefix(path, dirName+"/"), ".md")
 
 		// Handle index files by removing the /index suffix
 		if strings.HasSuffix(relPath, "/index") {
