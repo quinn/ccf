@@ -1,7 +1,6 @@
 package codegen
 
 import (
-	"embed"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -11,9 +10,6 @@ import (
 	"strings"
 	"text/template"
 )
-
-//go:embed templates/content.gotmpl
-var contentTemplates embed.FS
 
 type ContentType struct {
 	Name   string
@@ -95,7 +91,7 @@ func (g *ContentGenerator) Generate() error {
 	}
 
 	// Read template file
-	tmplContent, err := contentTemplates.ReadFile("templates/content.gotmpl")
+	tmplContent, err := templates.ReadFile("templates/content.gotmpl")
 	if err != nil {
 		return fmt.Errorf("failed to read content template: %w", err)
 	}
