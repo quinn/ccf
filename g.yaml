@@ -3,6 +3,10 @@ generators:
   - name: init
     args:
       - mod
+    pre:
+      - which task
     post:
       - go mod init {{ .mod }}
+      - task gen-pages
       - go mod tidy
+      - go get github.com/a-h/templ

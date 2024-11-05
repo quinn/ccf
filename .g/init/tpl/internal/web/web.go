@@ -9,8 +9,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"go.quinn.io/go-astro/assets"
-	"{{ .name }}/content"
-	"{{ .name }}/router"
+	"{{ .mod }}/content"
+	"{{ .mod }}/internal/router"
 )
 
 //go:embed public

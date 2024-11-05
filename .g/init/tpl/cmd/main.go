@@ -1,7 +1,7 @@
 package main
 
 import (
-	"{{ .name }}/internal/web"
+	"{{ .mod }}/internal/web"
 )
 
 func main() {

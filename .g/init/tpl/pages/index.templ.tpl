@@ -11,7 +11,7 @@ func IndexHandler(c echo.Context) ([]content.PostItem, error) {
 	return content.GetPosts()
 }
 
-templ Index(posts []map[string]string) {
+templ Index(posts []content.PostItem) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
