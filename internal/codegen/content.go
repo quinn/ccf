@@ -12,8 +12,9 @@ import (
 )
 
 type ContentType struct {
-	Name   string
-	Fields []*ast.Field
+	Name    string
+	Fields  []*ast.Field
+	DirName string // The actual directory name found
 }
 
 type ContentGenerator struct {
@@ -49,28 +50,34 @@ func (g *ContentGenerator) parseContentTypes(configPath string) ([]ContentType, 
 	return types, nil
 }
 
-func (g *ContentGenerator) getContentDirs(types []ContentType) ([]string, error) {
+func (g *ContentGenerator) findMatchingDir(typeName string, entries []os.DirEntry) string {
+	singular := strings.ToLower(typeName)
+	plural := singular + "s"
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+		dirName := entry.Name()
+		if dirName == singular || dirName == plural {
+			return dirName
+		}
+	}
+	return plural // default to plural if no matching directory found
+}
+
+func (g *ContentGenerator) getContentDirs(types []ContentType) ([]ContentType, error) {
 	entries, err := os.ReadDir(g.ContentDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content directory: %w", err)
 	}
 
-	// Create a map of lowercase type names for easier lookup
-	typeMap := make(map[string]bool)
-	for _, t := range types {
-		typeMap[strings.ToLower(t.Name)] = true
+	// Find matching directories for each type
+	for i := range types {
+		types[i].DirName = g.findMatchingDir(types[i].Name, entries)
 	}
 
-	var dirs []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			// Only include directories that have a corresponding type
-			if typeMap[entry.Name()] {
-				dirs = append(dirs, entry.Name())
-			}
-		}
-	}
-	return dirs, nil
+	return types, nil
 }
 
 var templateFuncs = template.FuncMap{
@@ -84,10 +91,16 @@ func (g *ContentGenerator) Generate() error {
 		return fmt.Errorf("failed to parse content types: %w", err)
 	}
 
-	// Get content directories, passing in the types
-	dirs, err := g.getContentDirs(types)
+	// Get content directories and match them to types
+	types, err = g.getContentDirs(types)
 	if err != nil {
 		return fmt.Errorf("failed to get content directories: %w", err)
+	}
+
+	// Create space-separated list of directories for embed directive
+	var dirs []string
+	for _, t := range types {
+		dirs = append(dirs, t.DirName)
 	}
 
 	// Create template data
