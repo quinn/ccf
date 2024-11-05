@@ -49,16 +49,25 @@ func (g *ContentGenerator) parseContentTypes(configPath string) ([]ContentType, 
 	return types, nil
 }
 
-func (g *ContentGenerator) getContentDirs() ([]string, error) {
+func (g *ContentGenerator) getContentDirs(types []ContentType) ([]string, error) {
 	entries, err := os.ReadDir(g.ContentDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read content directory: %w", err)
 	}
 
+	// Create a map of lowercase type names for easier lookup
+	typeMap := make(map[string]bool)
+	for _, t := range types {
+		typeMap[strings.ToLower(t.Name)] = true
+	}
+
 	var dirs []string
 	for _, entry := range entries {
 		if entry.IsDir() {
-			dirs = append(dirs, entry.Name())
+			// Only include directories that have a corresponding type
+			if typeMap[entry.Name()] {
+				dirs = append(dirs, entry.Name())
+			}
 		}
 	}
 	return dirs, nil
@@ -75,8 +84,8 @@ func (g *ContentGenerator) Generate() error {
 		return fmt.Errorf("failed to parse content types: %w", err)
 	}
 
-	// Get content directories
-	dirs, err := g.getContentDirs()
+	// Get content directories, passing in the types
+	dirs, err := g.getContentDirs(types)
 	if err != nil {
 		return fmt.Errorf("failed to get content directories: %w", err)
 	}
