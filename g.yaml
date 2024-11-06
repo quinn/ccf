@@ -1,4 +1,6 @@
 version: "1"
+include:
+  g: "gh:quinn/g"
 generators:
   - name: init
     args:
@@ -10,3 +12,6 @@ generators:
       - task gen-pages
       - go mod tidy
       - go get github.com/a-h/templ
+  - name: page
+    args:
+      - path

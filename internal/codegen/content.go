@@ -12,9 +12,10 @@ import (
 )
 
 type ContentType struct {
-	Name    string
-	Fields  []*ast.Field
-	DirName string // The actual directory name found
+	Name       string
+	PluralName string
+	Fields     []*ast.Field
+	DirName    string // The actual directory name found
 }
 
 type ContentGenerator struct {
@@ -39,8 +40,9 @@ func (g *ContentGenerator) parseContentTypes(configPath string) ([]ContentType, 
 		if typeSpec, ok := n.(*ast.TypeSpec); ok {
 			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
 				types = append(types, ContentType{
-					Name:   typeSpec.Name.Name,
-					Fields: structType.Fields.List,
+					Name:       typeSpec.Name.Name,
+					PluralName: typeSpec.Name.Name,
+					Fields:     structType.Fields.List,
 				})
 			}
 		}
@@ -50,7 +52,7 @@ func (g *ContentGenerator) parseContentTypes(configPath string) ([]ContentType, 
 	return types, nil
 }
 
-func (g *ContentGenerator) findMatchingDir(typeName string, entries []os.DirEntry) string {
+func (g *ContentGenerator) findMatchingDir(typeName string, entries []os.DirEntry) (string, bool) {
 	singular := strings.ToLower(typeName)
 	plural := singular + "s"
 
@@ -59,11 +61,17 @@ func (g *ContentGenerator) findMatchingDir(typeName string, entries []os.DirEntr
 			continue
 		}
 		dirName := entry.Name()
-		if dirName == singular || dirName == plural {
-			return dirName
+
+		if dirName == singular {
+			return dirName, false
+		}
+
+		if dirName == plural {
+			return dirName, true
 		}
 	}
-	return plural // default to plural if no matching directory found
+
+	return "", true // default to plural if no matching directory found
 }
 
 func (g *ContentGenerator) getContentDirs(types []ContentType) ([]ContentType, error) {
@@ -74,7 +82,11 @@ func (g *ContentGenerator) getContentDirs(types []ContentType) ([]ContentType, e
 
 	// Find matching directories for each type
 	for i := range types {
-		types[i].DirName = g.findMatchingDir(types[i].Name, entries)
+		dirName, isPlural := g.findMatchingDir(types[i].Name, entries)
+		types[i].DirName = dirName
+		if isPlural {
+			types[i].PluralName = types[i].Name + "s"
+		}
 	}
 
 	return types, nil

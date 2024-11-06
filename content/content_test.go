@@ -51,7 +51,7 @@ func TestLoadAndGetItems(t *testing.T) {
 	fsys := setupTestFS()
 
 	// Load items first
-	err := LoadItems[Post](fsys)
+	err := LoadItems[Post](fsys, "posts")
 	if err != nil {
 		t.Fatalf("Failed to load items: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestIndex(t *testing.T) {
 	fsys := setupTestFS()
 
 	// Load items first
-	err := LoadItems[Post](fsys)
+	err := LoadItems[Post](fsys, "posts")
 	if err != nil {
 		t.Fatalf("Failed to load items: %v", err)
 	}
@@ -129,7 +129,7 @@ func TestIndex(t *testing.T) {
 func TestLoadItemsNonexistentDirectory(t *testing.T) {
 	fsys := fstest.MapFS{}
 
-	err := LoadItems[Post](fsys)
+	err := LoadItems[Post](fsys, "posts")
 	if err != nil {
 		t.Fatal("Expected no error when loading from empty filesystem")
 	}

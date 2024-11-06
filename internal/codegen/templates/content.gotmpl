@@ -19,7 +19,7 @@ type {{.Name}}Item = content.ContentItem[{{.Name}}]
 // This must be called before using any Get* functions.
 func Initialize() error {
 	{{- range .Types }}
-	if err := content.LoadItems[{{ .Name }}](FS); err != nil {
+	if err := content.LoadItems[{{ .Name }}](FS, "{{ .DirName }}"); err != nil {
 		return fmt.Errorf("failed to load {{ .Name | lower }}s: %w", err)
 	}
 	{{- end }}
@@ -27,8 +27,8 @@ func Initialize() error {
 }
 
 {{- range .Types }}
-// Get{{ .Name }}s returns all {{ .Name | lower }}s with their metadata and content.
-func Get{{ .Name }}s() ([]{{ .Name }}Item, error) {
+// Get{{ .PluralName }} returns all {{ .Name | lower }}s with their metadata and content.
+func Get{{ .PluralName }}() ([]{{ .Name }}Item, error) {
 	return content.GetItems[{{ .Name }}]()
 }
 {{- end }}
