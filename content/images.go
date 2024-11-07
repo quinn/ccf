@@ -38,7 +38,7 @@ func (r *markdownImagesRenderer) encodeImage(src []byte) ([]byte, error) {
 		return src, nil
 	}
 
-	return []byte(r.parentPath + "/" + s), nil
+	return []byte(filepath.Join(r.parentPath, s)), nil
 }
 
 // ALL THE STUFF BELOW IS BOILERPLATE COPIED FROM

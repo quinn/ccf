@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/adrg/frontmatter"
-	img64 "github.com/tenkoh/goldmark-img64"
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
@@ -73,9 +73,8 @@ func LoadItems[T any](fsys fs.FS, dirName string) error {
 		// Convert markdown to HTML
 		markdown := goldmark.New(
 			goldmark.WithExtensions(
-				img64.Img64,
 				&markdownImages{
-					parentPath: "/content" + dirName + path,
+					parentPath: filepath.Dir(filepath.Join("/content", path)),
 				},
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("rrt"),
