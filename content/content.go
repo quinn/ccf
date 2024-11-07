@@ -1,13 +1,16 @@
 package content
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"reflect"
 	"strings"
 
 	"github.com/adrg/frontmatter"
-	"github.com/gomarkdown/markdown"
+	img64 "github.com/tenkoh/goldmark-img64"
+	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
 // ContentItem represents a single content item with its metadata and rendered content
@@ -68,15 +71,26 @@ func LoadItems[T any](fsys fs.FS, dirName string) error {
 		}
 
 		// Convert markdown to HTML
-		html := markdown.ToHTML(remainder, nil, nil)
+		markdown := goldmark.New(
+			goldmark.WithExtensions(
+				img64.Img64,
+				&markdownImages{
+					parentPath: "/content" + dirName + path,
+				},
+				highlighting.NewHighlighting(
+					highlighting.WithStyle("rrt"),
+				),
+			),
+		)
+		var htmlWriter bytes.Buffer
+		markdown.Convert(remainder, &htmlWriter)
+		html := htmlWriter.Bytes()
 
 		// Get relative path without extension for routing
 		relPath := strings.TrimSuffix(strings.TrimPrefix(path, dirName+"/"), ".md")
 
 		// Handle index files by removing the /index suffix
-		if strings.HasSuffix(relPath, "/index") {
-			relPath = strings.TrimSuffix(relPath, "/index")
-		}
+		relPath = strings.TrimSuffix(relPath, "/index")
 
 		item := ContentItem[T]{
 			Meta:    reflect.ValueOf(meta).Elem().Interface().(T),

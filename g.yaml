@@ -7,11 +7,16 @@ generators:
       - mod
     pre:
       - which task
+      - which goimports
+      - which templ
     post:
       - go mod init {{ .mod }}
       - task gen-pages
       - go mod tidy
-      - go get github.com/a-h/templ
   - name: page
     args:
       - path
+    post:
+      - templ fmt pages/{{ .filename }}.templ
+      - templ generate
+      - task gen-pages

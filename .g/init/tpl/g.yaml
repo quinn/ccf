@@ -1,0 +1,2 @@
+include:
+  ccf: "gh:quinn/go-astro"
