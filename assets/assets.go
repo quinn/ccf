@@ -78,8 +78,8 @@ func ImportMap() *template.Template {
 	importMap := "<script type=\"importmap\">\n{\n"
 	importMap += "\"imports\": {\n"
 	var imports []string
-	for path, fpath := range manifest {
-		imports = append(imports, fmt.Sprintf("  \"%s\": \"/%s\"", path, fpath))
+	for path := range manifest {
+		imports = append(imports, fmt.Sprintf(`  "%s": "%s"`, path, Path(path)))
 	}
 	importMap += fmt.Sprintf("%s\n", strings.Join(imports, ",\n"))
 	importMap += "}\n"
