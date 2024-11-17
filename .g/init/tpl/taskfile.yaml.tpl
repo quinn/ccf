@@ -11,7 +11,7 @@ tasks:
   gen-pages:
     cmds:
       - |
-        go run go.quinn.io/go-astro/cmd/generate/pages@latest \
+        go run go.quinn.io/ccf/cmd/generate/pages@latest \
           -pages pages \
           -output internal/router/router.go \
           -package router && \
@@ -35,7 +35,7 @@ tasks:
       - figlet "Generating content..."
       - |
         go run github.com/cosmtrek/air@v1.51.0 \
-          --build.cmd "go run go.quinn.io/go-astro/cmd/generate/content@latest -content content" \
+          --build.cmd "go run go.quinn.io/ccf/cmd/generate/content@latest -content content" \
           --build.bin "true" \
           --build.delay "100" \
           --build.exclude_dir "" \

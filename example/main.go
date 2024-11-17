@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go.quinn.io/go-astro/example/internal/web"
+	"go.quinn.io/ccf/example/internal/web"
 )
 
 func main() {

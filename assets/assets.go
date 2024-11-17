@@ -3,10 +3,12 @@ package assets
 import (
 	"embed"
 	"fmt"
+	"html/template"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -61,6 +63,29 @@ func Manifest() map[string]string {
 	}
 
 	return m
+}
+
+func ImportMap() *template.Template {
+	if ffs == nil {
+		panic("Please run assets.Attach before calling assets.ImportMap")
+	}
+
+	manifest := Manifest()
+	if manifest == nil {
+		return nil
+	}
+
+	importMap := "<script type=\"importmap\">\n{\n"
+	importMap += "\"imports\": {\n"
+	var imports []string
+	for path, fpath := range manifest {
+		imports = append(imports, fmt.Sprintf("  \"%s\": \"/%s\"", path, fpath))
+	}
+	importMap += fmt.Sprintf("%s\n", strings.Join(imports, ",\n"))
+	importMap += "}\n"
+	importMap += "}\n</script>\n"
+
+	return template.Must(template.New("importmap").Parse(importMap))
 }
 
 func Path(path string) string {

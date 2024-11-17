@@ -1,4 +1,4 @@
-module go.quinn.io/go-astro
+module go.quinn.io/ccf
 
 go 1.22.0
 

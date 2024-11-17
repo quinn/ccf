@@ -5,7 +5,7 @@ import (
 	"log"
 	"path/filepath"
 
-	"go.quinn.io/go-astro/internal/codegen"
+	"go.quinn.io/ccf/internal/codegen"
 )
 
 func main() {

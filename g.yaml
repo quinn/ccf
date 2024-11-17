@@ -20,3 +20,17 @@ generators:
       - templ fmt pages/{{ .filename }}.templ
       - templ generate
       - task gen-pages
+  - name: route
+    args:
+      - method
+      - path
+    transforms:
+      - addRoute: internal/web/server.go
+  - name: view
+    args:
+      - package
+      - funcName
+  - name: action
+    use:
+      - route
+      - view

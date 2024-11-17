@@ -5,7 +5,7 @@ import (
 	"embed"
 	"fmt"
 
-	"go.quinn.io/go-astro/content"
+	"go.quinn.io/ccf/content"
 )
 
 //go:embed posts

@@ -2,7 +2,7 @@ package pages
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/assets"
+	"go.quinn.io/ccf/assets"
 	"{{ .mod }}/content"
 )
 

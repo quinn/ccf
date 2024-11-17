@@ -10,8 +10,8 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.quinn.io/go-astro/assets"
-	"go.quinn.io/go-astro/example/content"
+	"go.quinn.io/ccf/assets"
+	"go.quinn.io/ccf/example/content"
 )
 
 func PostsHandler(c echo.Context) ([]content.PostItem, error) {
