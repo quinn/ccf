@@ -8,16 +8,17 @@ tasks:
         go run github.com/a-h/templ/cmd/templ@latest generate\
           --watch --proxy="http://localhost:3000" \
           --open-browser=false
+
   gen-pages:
     cmds:
       - |
-        go run go.quinn.io/ccf/cmd/generate/pages@latest \
+        ccff generate/pages \
           -pages pages \
           -output internal/router/router.go \
           -package router && \
             goimports -w internal/router/router.go
 
-  live:gen-pages:
+  live:pages:
     cmds:
       - figlet "Generating pages..."
       - |
@@ -29,13 +30,18 @@ tasks:
           --build.include_dir "pages" \
           --build.include_ext "go"
 
+  gen-content:
+    cmds:
+      - |
+        ccff generate/content \
+          -content content
 
-  live:gen-content:
+  live:content:
     cmds:
       - figlet "Generating content..."
       - |
         go run github.com/cosmtrek/air@v1.51.0 \
-          --build.cmd "go run go.quinn.io/ccf/cmd/generate/content@latest -content content" \
+          --build.cmd "task gen-content" \
           --build.bin "true" \
           --build.delay "100" \
           --build.exclude_dir "" \
@@ -81,7 +87,7 @@ tasks:
         task -p \
           live:templ \
           live:server \
-          live:gen-pages \
-          live:gen-content \
+          live:pages \
+          live:content \
           live:tailwind \
           live:assets

@@ -1,51 +1,64 @@
 version: '3'
 
-vars:
-  BIN_NAME: "example_bin"
-
 tasks:
   live:templ:
     cmds:
       - figlet "Running templ..."
       - |
-        templ generate \
+        go run github.com/a-h/templ/cmd/templ@latest generate\
           --watch --proxy="http://localhost:3000" \
           --open-browser=false
 
-  live:gen-pages:
-    watch: true
-    sources:
-      - pages/*.go
+  gen-pages:
+    cmds:
+      - |
+        ccff generate/pages \
+          -pages pages \
+          -output internal/router/router.go \
+          -package router && \
+            goimports -w internal/router/router.go
+
+  live:pages:
     cmds:
       - figlet "Generating pages..."
       - |
-        go run ../cmd/generate/pages/main.go \
-          -pages pages \
-          -output router/router.go \
-          -package router
-      - goimports -w router/router.go
-      # - templ generate --notify-proxy || true
+        go run github.com/cosmtrek/air@v1.51.0 \
+          --build.cmd "task gen-pages" \
+          --build.bin "true" \
+          --build.delay "100" \
+          --build.exclude_dir "" \
+          --build.include_dir "pages" \
+          --build.include_ext "go"
 
-  live:gen-content:
-    watch: true
-    sources:
-      - content/**/*
-      - exclude: content/fs.go
+  gen-content:
+    cmds:
+      - |
+        ccff generate/content \
+          -content content
+
+  live:content:
     cmds:
       - figlet "Generating content..."
-      - go run ../cmd/generate/content/main.go -content content
-      # - templ generate --notify-proxy || true
+      - |
+        go run github.com/cosmtrek/air@v1.51.0 \
+          --build.cmd "task gen-content" \
+          --build.bin "true" \
+          --build.delay "100" \
+          --build.exclude_dir "" \
+          --build.include_dir "content" \
+          --build.include_ext "md"
 
   live:server:
-    watch: true
-    sources:
-      - "**/*.go"
     cmds:
       - figlet "Running server..."
-      - killall -q {{.BIN_NAME}} || echo "Process was not running."
-      - go build -o ./tmp/{{.BIN_NAME}} main.go
-      - templ generate --notify-proxy || true
-      - ./tmp/{{.BIN_NAME}}
+      - |
+        go run github.com/cosmtrek/air@v1.51.0 \
+          --build.cmd "go build -o ./tmp/main cmd/main.go && templ generate --notify-proxy"
+          --build.bin "./tmp/main"
+          --build.delay "100" \
+          --build.include_ext "go" \
+          --build.stop_on_error "false" \
+          --misc.clean_on_exit true
 
   live:tailwind:
     cmds:
@@ -57,22 +70,24 @@ tasks:
           --watch
 
   live:assets:
-    watch: true
-    sources:
-      - internal/web/public/styles.css
     cmds:
       - figlet "Generating assets..."
-      - templ generate --notify-proxy || true
+      - |
+        go run github.com/cosmtrek/air@v1.51.0 \
+          --build.cmd "templ generate --notify-proxy" \
+          --build.bin "true" \
+          --build.delay "100" \
+          --build.exclude_dir "" \
+          --build.include_dir "internal/web/public" \
+          --build.include_ext "css"
 
   live:
     cmds:
       - |
-        task live:templ & \
-        task live:server & \
-        task live:gen-pages & \
-        task live:tailwind & \
-        task live:assets
-
-  live-doesnt-work:
-    cmds:
-      - task -vp live:templ live:server live:gen-pages live:tailwind live:assets
+        task -p \
+          live:templ \
+          live:server \
+          live:pages \
+          live:content \
+          live:tailwind \
+          live:assets
