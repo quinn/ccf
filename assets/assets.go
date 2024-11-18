@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -18,7 +19,31 @@ import (
 var prefix string
 var ffs *fingerprintedFS
 
-func Attach(e *echo.Echo, inputprefix string, assetDir string, embedFS embed.FS, embedded bool) {
+// func (e *Echo) StaticFS(pathPrefix string, filesystem fs.FS) *Route {
+// 	return e.Add(
+// 		http.MethodGet,
+// 		pathPrefix+"*",
+// 		StaticDirectoryHandler(filesystem, false),
+// 	)
+// }
+
+func StaticFSWithHeader(e *echo.Echo, pathPrefix string, filesystem fs.FS) *echo.Route {
+	originalHandler := echo.StaticDirectoryHandler(filesystem, false)
+
+	// Wrap the original handler
+	wrappedHandler := func(c echo.Context) error {
+		// Check if the requested file is 'service-worker.js'
+		if strings.Contains(c.Request().URL.Path, "service-worker") {
+			c.Response().Header().Set("Service-Worker-Allowed", "/")
+		}
+		// Call the original handler
+		return originalHandler(c)
+	}
+
+	return e.Add(http.MethodGet, "/"+pathPrefix+"*", wrappedHandler)
+}
+
+func Attach(e *echo.Echo, urlprefix string, assetDir string, embedFS embed.FS, embedded bool) {
 	if ffs != nil {
 		log.Fatalf("assets.Attach called more than once")
 	}
@@ -26,7 +51,7 @@ func Attach(e *echo.Echo, inputprefix string, assetDir string, embedFS embed.FS,
 	var inputFS fs.FS
 
 	if embedded {
-		inputFS = echo.MustSubFS(embedFS, prefix)
+		inputFS = echo.MustSubFS(embedFS, path.Base(assetDir))
 	} else {
 		inputFS = os.DirFS(assetDir)
 	}
@@ -37,10 +62,11 @@ func Attach(e *echo.Echo, inputprefix string, assetDir string, embedFS embed.FS,
 	}
 
 	// init global variables
-	prefix = inputprefix
+	prefix = urlprefix
 	ffs = fingerprintFS
 
-	e.StaticFS("/"+prefix, fingerprintFS)
+	// e.StaticFS("/"+prefix, fingerprintFS)
+	StaticFSWithHeader(e, prefix, fingerprintFS)
 
 	e.GET("/"+prefix+"/asset-manifest.json", func(c echo.Context) error {
 		manifest, err := fingerprintFS.Manifest()
