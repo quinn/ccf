@@ -1,18 +1,28 @@
 version: '3'
 
 tasks:
+  install-tools:
+    cmds:
+      - |
+        go install golang.org/x/tools/cmd/goimports@latest
+
+  gen-templ:
+    cmds:
+      - |
+        go run github.com/a-h/templ/cmd/templ@latest generate
+
   live:templ:
     cmds:
       - figlet "Running templ..."
       - |
-        go run github.com/a-h/templ/cmd/templ@latest generate\
+        go run github.com/a-h/templ/cmd/templ@latest generate \
           --watch --proxy="http://localhost:3000" \
           --open-browser=false
 
   gen-pages:
     cmds:
       - |
-        ccff generate/pages \
+        go run go.quinn.io/ccf/cmd/generate/pages@latest \
           -pages pages \
           -output internal/router/router.go \
           -package router && \
@@ -33,7 +43,7 @@ tasks:
   gen-content:
     cmds:
       - |
-        ccff generate/content \
+        go run go.quinn.io/ccf/cmd/generate/content@latest \
           -content content
 
   live:content:

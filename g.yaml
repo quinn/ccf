@@ -12,6 +12,9 @@ generators:
     post:
       - go mod init {{ .mod }}
       - task gen-pages
+      - task gen-content
+      - task gen-templ
+      - task gen-pages
       - go mod tidy
   - name: page
     args:

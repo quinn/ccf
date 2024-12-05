@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"go.quinn.io/ccf/assets"
 	"go.quinn.io/ccf/example/content"
-	"go.quinn.io/ccf/example/router"
+	"go.quinn.io/ccf/example/internal/router"
 )
 
 //go:embed public
@@ -18,10 +18,10 @@ var assetsFS embed.FS
 
 func Run() {
 	// Load content before starting server
-	content.Initialize()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
+	content.Initialize(e)
 
 	// Register routes from generated code
 	router.RegisterRoutes(e)
