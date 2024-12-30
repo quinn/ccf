@@ -17,7 +17,9 @@ var templates embed.FS
 type PageRoute struct {
 	Path         string
 	TemplatePath string
-	HandlerName  string
+	GETHandler   string
+	POSTHandler  string
+	HasPOST      bool
 	Params       []string
 	Component    string
 }
@@ -139,18 +141,35 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 	}
 
 	// Generate handler name by combining all parts and adding Handler suffix
-	handlerName := strings.Join(handlerParts, "") + "Handler"
-
-	// Generate component name (without Handler suffix)
 	component := strings.Join(handlerParts, "")
+	getHandler := component + "GET"
+	postHandler := component + "POST"
+
+	// Check if the POST handler exists in the template file
+	hasPost := g.hasPostHandler(filename, component)
 
 	return PageRoute{
 		Path:         routePath,
 		TemplatePath: filename,
-		HandlerName:  handlerName,
+		GETHandler:   getHandler,
+		POSTHandler:  postHandler,
+		HasPOST:      hasPost,
 		Params:       params,
 		Component:    component,
 	}, nil
+}
+
+// hasPostHandler checks if a templ file has a POST handler function
+func (g *Generator) hasPostHandler(filename string, component string) bool {
+	fullPath := filepath.Join(g.PagesDir, filename)
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		return false
+	}
+
+	// Look for a function named [component]POST
+	postHandlerPattern := fmt.Sprintf("func %sPOST", component)
+	return strings.Contains(string(content), postHandlerPattern)
 }
 
 // generateRouterCode generates the router implementation

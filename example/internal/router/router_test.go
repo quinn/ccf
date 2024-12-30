@@ -17,7 +17,7 @@ func TestIndexHandler(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	// Test
-	err := IndexHandler(c)
+	err := IndexGET(c)
 
 	// Assertions
 	assert.NoError(t, err)
@@ -37,7 +37,7 @@ func TestBlogSlugHandler(t *testing.T) {
 	c.SetParamValues("test-post")
 
 	// Test
-	err := BlogSlugHandler(c)
+	err := BlogSlugGET(c)
 
 	// Assertions
 	assert.NoError(t, err)

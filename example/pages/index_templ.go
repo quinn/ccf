@@ -13,7 +13,7 @@ import (
 	"go.quinn.io/ccf/assets"
 )
 
-func IndexHandler(c echo.Context) ([]map[string]string, error) {
+func IndexGET(c echo.Context) ([]map[string]string, error) {
 	return []map[string]string{
 		{"title": "First Blog Post", "slug": "first-post"},
 		{"title": "Second Blog Post", "slug": "second-post"},

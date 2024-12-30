@@ -8,26 +8,40 @@ import (
 // RegisterRoutes adds all page routes to the Echo instance
 func RegisterRoutes(e *echo.Echo) {
 {{- range .Routes}}
-	e.GET("{{.Path}}", {{.HandlerName}})
+	e.GET("{{.Path}}", {{.GETHandler}})
+	{{- if .HasPOST}}
+	e.POST("{{.Path}}", {{.POSTHandler}})
+	{{- end}}
 {{- end}}
 }
 
 {{- range .Routes}}
 
-// {{.HandlerName}} handles requests to {{.Path}}
-func {{.HandlerName}}(c echo.Context) error {
+// {{.GETHandler}} handles GET requests to {{.Path}}
+func {{.GETHandler}}(c echo.Context) error {
 	{{- if .Params}}
-	result, err := pages.{{.Component}}Handler(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
+	result, err := pages.{{.Component}}GET(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
 	if err != nil {
 		return err
 	}
 	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
 	{{- else}}
-	result, err := pages.{{.Component}}Handler(c)
+	result, err := pages.{{.Component}}GET(c)
 	if err != nil {
 		return err
 	}
 	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
 	{{- end}}
 }
+{{- if .HasPOST}}
+
+// {{.POSTHandler}} handles POST requests to {{.Path}}
+func {{.POSTHandler}}(c echo.Context) error {
+	{{- if .Params}}
+	return pages.{{.Component}}POST(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
+	{{- else}}
+	return pages.{{.Component}}POST(c)
+	{{- end}}
+}
+{{- end}}
 {{- end}}

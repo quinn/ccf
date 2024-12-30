@@ -8,34 +8,40 @@ import (
 
 // RegisterRoutes adds all page routes to the Echo instance
 func RegisterRoutes(e *echo.Echo) {
-	e.GET("/blog/:slug", BlogSlugHandler)
-	e.GET("/", IndexHandler)
-	e.GET("/posts", PostsHandler)
+	e.GET("/blog/:slug", BlogSlugGET)
+	e.GET("/", IndexGET)
+	e.GET("/posts", PostsGET)
+	e.POST("/posts", PostsPOST)
 }
 
-// BlogSlugHandler handles requests to /blog/:slug
-func BlogSlugHandler(c echo.Context) error {
-	result, err := pages.BlogSlugHandler(c, c.Param("slug"))
+// BlogSlugGET handles GET requests to /blog/:slug
+func BlogSlugGET(c echo.Context) error {
+	result, err := pages.BlogSlugGET(c, c.Param("slug"))
 	if err != nil {
 		return err
 	}
 	return pages.BlogSlug(result).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// IndexHandler handles requests to /
-func IndexHandler(c echo.Context) error {
-	result, err := pages.IndexHandler(c)
+// IndexGET handles GET requests to /
+func IndexGET(c echo.Context) error {
+	result, err := pages.IndexGET(c)
 	if err != nil {
 		return err
 	}
 	return pages.Index(result).Render(c.Request().Context(), c.Response().Writer)
 }
 
-// PostsHandler handles requests to /posts
-func PostsHandler(c echo.Context) error {
-	result, err := pages.PostsHandler(c)
+// PostsGET handles GET requests to /posts
+func PostsGET(c echo.Context) error {
+	result, err := pages.PostsGET(c)
 	if err != nil {
 		return err
 	}
 	return pages.Posts(result).Render(c.Request().Context(), c.Response().Writer)
+}
+
+// PostsPOST handles POST requests to /posts
+func PostsPOST(c echo.Context) error {
+	return pages.PostsPOST(c)
 }
