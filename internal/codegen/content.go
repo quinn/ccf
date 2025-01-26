@@ -22,7 +22,7 @@ type ContentGenerator struct {
 	ContentDir string
 }
 
-func NewContentGenerator(contentDir string) *ContentGenerator {
+func NewContent(contentDir string) *ContentGenerator {
 	return &ContentGenerator{
 		ContentDir: contentDir,
 	}

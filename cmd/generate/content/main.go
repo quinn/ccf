@@ -16,7 +16,7 @@ func main() {
 		log.Fatal("Content directory path is required")
 	}
 
-	generator := codegen.NewContentGenerator(*contentDir)
+	generator := codegen.NewContent(*contentDir)
 	if err := generator.Generate(); err != nil {
 		log.Fatalf("Failed to generate content: %v", err)
 	}

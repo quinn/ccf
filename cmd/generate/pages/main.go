@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("Failed to get absolute path for pages directory: %v", err)
 	}
 
-	generator := codegen.New(absPages, *output, *pkgName)
+	generator := codegen.NewPages(absPages, *output, *pkgName)
 	if err := generator.Generate(); err != nil {
 		log.Fatalf("Failed to generate router code: %v", err)
 	}

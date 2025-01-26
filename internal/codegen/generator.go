@@ -24,16 +24,16 @@ type PageRoute struct {
 	Component    string
 }
 
-// Generator handles the code generation for routes
-type Generator struct {
+// PagesGenerator handles the code generation for routes
+type PagesGenerator struct {
 	PagesDir    string
 	OutputPath  string
 	PackageName string
 }
 
-// New creates a new Generator instance
-func New(pagesDir, outputPath, packageName string) *Generator {
-	return &Generator{
+// NewPages creates a new Generator instance
+func NewPages(pagesDir, outputPath, packageName string) *PagesGenerator {
+	return &PagesGenerator{
 		PagesDir:    pagesDir,
 		OutputPath:  outputPath,
 		PackageName: packageName,
@@ -41,7 +41,7 @@ func New(pagesDir, outputPath, packageName string) *Generator {
 }
 
 // Generate scans the pages directory and generates route code
-func (g *Generator) Generate() error {
+func (g *PagesGenerator) Generate() error {
 	routes, err := g.scanPagesDirectory()
 	if err != nil {
 		return fmt.Errorf("failed to scan pages directory: %w", err)
@@ -51,7 +51,7 @@ func (g *Generator) Generate() error {
 }
 
 // scanPagesDirectory walks through the pages directory and generates route information
-func (g *Generator) scanPagesDirectory() ([]PageRoute, error) {
+func (g *PagesGenerator) scanPagesDirectory() ([]PageRoute, error) {
 	var routes []PageRoute
 
 	err := filepath.Walk(g.PagesDir, func(path string, info os.FileInfo, err error) error {
@@ -102,7 +102,7 @@ func toUpperCamelCase(s string) string {
 }
 
 // parseRouteFromFilename converts a template filename into a route
-func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
+func (g *PagesGenerator) parseRouteFromFilename(filename string) (PageRoute, error) {
 	// Remove .templ suffix and get the base filename without directory
 	base := filepath.Base(filename)
 	base = strings.TrimSuffix(base, ".templ")
@@ -160,7 +160,7 @@ func (g *Generator) parseRouteFromFilename(filename string) (PageRoute, error) {
 }
 
 // hasPostHandler checks if a templ file has a POST handler function
-func (g *Generator) hasPostHandler(filename string, component string) bool {
+func (g *PagesGenerator) hasPostHandler(filename string, component string) bool {
 	fullPath := filepath.Join(g.PagesDir, filename)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
@@ -173,7 +173,7 @@ func (g *Generator) hasPostHandler(filename string, component string) bool {
 }
 
 // generateRouterCode generates the router implementation
-func (g *Generator) generateRouterCode(routes []PageRoute) error {
+func (g *PagesGenerator) generateRouterCode(routes []PageRoute) error {
 	tmplContent, err := templates.ReadFile("templates/router.gotmpl")
 	if err != nil {
 		return fmt.Errorf("failed to read router template: %w", err)
