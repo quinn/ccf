@@ -19,7 +19,9 @@ type PageRoute struct {
 	TemplatePath string
 	GETHandler   string
 	POSTHandler  string
+	DELETEHandler string
 	HasPOST      bool
+	HasDELETE    bool
 	Params       []string
 	Component    string
 }
@@ -144,32 +146,36 @@ func (g *PagesGenerator) parseRouteFromFilename(filename string) (PageRoute, err
 	component := strings.Join(handlerParts, "")
 	getHandler := component + "GET"
 	postHandler := component + "POST"
+	deleteHandler := component + "DELETE"
 
-	// Check if the POST handler exists in the template file
-	hasPost := g.hasPostHandler(filename, component)
+	// Check if the handlers exist in the template file
+	hasPost := g.hasHandler(filename, component, "POST")
+	hasDelete := g.hasHandler(filename, component, "DELETE")
 
 	return PageRoute{
 		Path:         routePath,
 		TemplatePath: filename,
 		GETHandler:   getHandler,
 		POSTHandler:  postHandler,
+		DELETEHandler: deleteHandler,
 		HasPOST:      hasPost,
+		HasDELETE:    hasDelete,
 		Params:       params,
 		Component:    component,
 	}, nil
 }
 
-// hasPostHandler checks if a templ file has a POST handler function
-func (g *PagesGenerator) hasPostHandler(filename string, component string) bool {
+// hasHandler checks if a templ file has a handler function for the given method
+func (g *PagesGenerator) hasHandler(filename string, component string, method string) bool {
 	fullPath := filepath.Join(g.PagesDir, filename)
 	content, err := os.ReadFile(fullPath)
 	if err != nil {
 		return false
 	}
 
-	// Look for a function named [component]POST
-	postHandlerPattern := fmt.Sprintf("func %sPOST", component)
-	return strings.Contains(string(content), postHandlerPattern)
+	// Look for a function named [component][METHOD]
+	handlerPattern := fmt.Sprintf("func %s%s", component, method)
+	return strings.Contains(string(content), handlerPattern)
 }
 
 // generateRouterCode generates the router implementation

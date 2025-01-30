@@ -12,6 +12,9 @@ func RegisterRoutes(e *echo.Echo) {
 	{{- if .HasPOST}}
 	e.POST("{{.Path}}", {{.POSTHandler}})
 	{{- end}}
+	{{- if .HasDELETE}}
+	e.DELETE("{{.Path}}", {{.DELETEHandler}})
+	{{- end}}
 {{- end}}
 }
 
@@ -33,8 +36,8 @@ func {{.GETHandler}}(c echo.Context) error {
 	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
 	{{- end}}
 }
-{{- if .HasPOST}}
 
+{{- if .HasPOST}}
 // {{.POSTHandler}} handles POST requests to {{.Path}}
 func {{.POSTHandler}}(c echo.Context) error {
 	{{- if .Params}}
@@ -44,4 +47,16 @@ func {{.POSTHandler}}(c echo.Context) error {
 	{{- end}}
 }
 {{- end}}
+
+{{- if .HasDELETE}}
+// {{.DELETEHandler}} handles DELETE requests to {{.Path}}
+func {{.DELETEHandler}}(c echo.Context) error {
+	{{- if .Params}}
+	return pages.{{.Component}}DELETE(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
+	{{- else}}
+	return pages.{{.Component}}DELETE(c)
+	{{- end}}
+}
+{{- end}}
+
 {{- end}}
