@@ -1,6 +1,7 @@
 package content
 
 import (
+	"bufio"
 	"bytes"
 	"path/filepath"
 	"strings"
@@ -14,31 +15,41 @@ import (
 
 type markdownImages struct {
 	parentPath string
+	callback   func(imageTag string) string
 }
+
+// Extend implements goldmark.Extender.
+func (e *markdownImages) Extend(m goldmark.Markdown) {
+	m.Renderer().AddOptions(renderer.WithNodeRenderers(
+		util.Prioritized(newMarkdownImagesRenderer(e.parentPath, e.callback), 500),
+	))
+}
+
 type markdownImagesRenderer struct {
 	html.Config
 	parentPath string
+	callback   func(imageTag string) string
 }
 
-func (r *markdownImagesRenderer) encodeImage(src []byte) ([]byte, error) {
+func (r *markdownImagesRenderer) encodeImage(src []byte) string {
 	s := string(src)
 
 	// hotlink
 	if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
-		return src, nil
+		return s
 	}
 
 	// data url
 	if strings.HasPrefix(s, "data:") {
-		return src, nil
+		return s
 	}
 
 	// absolute path
 	if filepath.IsAbs(s) {
-		return src, nil
+		return s
 	}
 
-	return []byte(filepath.Join(r.parentPath, s)), nil
+	return filepath.Join(r.parentPath, s)
 }
 
 // ALL THE STUFF BELOW IS BOILERPLATE COPIED FROM
@@ -49,32 +60,37 @@ func (r *markdownImagesRenderer) renderImage(w util.BufWriter, source []byte, no
 	if !entering {
 		return ast.WalkContinue, nil
 	}
+
 	n := node.(*ast.Image)
-	_, _ = w.WriteString(`<img src="`)
+	elt := ""
+	elt += `<img src="`
+
 	if r.Unsafe || !html.IsDangerousURL(n.Destination) {
-		s, err := r.encodeImage(n.Destination)
-		if err != nil || s == nil {
-			_, _ = w.Write(util.EscapeHTML(util.URLEscape(n.Destination, true)))
-		} else {
-			_, _ = w.Write(s)
-		}
+		elt += r.encodeImage(n.Destination)
 	}
-	_, _ = w.WriteString(`" alt="`)
-	_, _ = w.Write(nodeToHTMLText(n, source))
-	_ = w.WriteByte('"')
+	elt += `" alt="`
+	elt += string(nodeToHTMLText(n, source))
+	elt += `"`
 	if n.Title != nil {
-		_, _ = w.WriteString(` title="`)
-		r.Writer.Write(w, n.Title)
-		_ = w.WriteByte('"')
+		elt += ` title="`
+		elt += string(n.Title)
+		elt += `"`
 	}
+
+	buf := &bytes.Buffer{}
 	if n.Attributes() != nil {
-		html.RenderAttributes(w, n, html.ImageAttributeFilter)
+		html.RenderAttributes(bufio.NewWriter(buf), n, html.ImageAttributeFilter)
 	}
+	elt += buf.String()
+
 	if r.XHTML {
-		_, _ = w.WriteString(" />")
+		elt += " />"
 	} else {
-		_, _ = w.WriteString(">")
+		elt += ">"
 	}
+
+	elt = r.callback(elt)
+	_, _ = w.WriteString(elt)
 	return ast.WalkSkipChildren, nil
 }
 
@@ -97,15 +113,9 @@ func (r *markdownImagesRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegi
 	reg.Register(ast.KindImage, r.renderImage)
 }
 
-func newMarkdownImagesRenderer(parentPath string) renderer.NodeRenderer {
+func newMarkdownImagesRenderer(parentPath string, callback func(imageTag string) string) renderer.NodeRenderer {
 	return &markdownImagesRenderer{
 		parentPath: parentPath,
+		callback:   callback,
 	}
-}
-
-// Extend implements goldmark.Extender.
-func (e *markdownImages) Extend(m goldmark.Markdown) {
-	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(newMarkdownImagesRenderer(e.parentPath), 500),
-	))
 }

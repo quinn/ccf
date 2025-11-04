@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"path/filepath"
 	"reflect"
 	"strings"
 
 	"github.com/adrg/frontmatter"
+	obsidian "github.com/powerman/goldmark-obsidian"
 	"github.com/yuin/goldmark"
+
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
 )
 
@@ -36,18 +39,36 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 	return items, nil
 }
 
+type loadConfig struct {
+	imageCallback func(imageTag string) string
+}
+
+type LoadOpt func(*loadConfig)
+
+func ImagePostProcess(imageCallback func(imageTag string) string) LoadOpt {
+	return func(config *loadConfig) {
+		config.imageCallback = imageCallback
+	}
+}
+
 // LoadItems loads all content items for a given type T from the provided filesystem.
 // The items will be loaded from the specified directory.
-func LoadItems[T any](fsys fs.FS, dirName string) error {
+func LoadItems[T any](fsys fs.FS, dirName string, opts ...LoadOpt) error {
+	cfg := loadConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	delete(store, t)
 
 	var items []ContentItem[T]
 
+	slog.Info("Loading content", "type", t, "dir", dirName)
 	err := fs.WalkDir(fsys, dirName, func(path string, d fs.DirEntry, err error) error {
+		slog.Debug("Walking directory", "path", path)
 		if err != nil {
 			if d == nil {
-				return nil // Skip if directory doesn't exist
+				return fmt.Errorf("dir is missing: %w", err)
 			}
 			return fmt.Errorf("failed to walk directory: %w", err)
 		}
@@ -73,8 +94,10 @@ func LoadItems[T any](fsys fs.FS, dirName string) error {
 		// Convert markdown to HTML
 		markdown := goldmark.New(
 			goldmark.WithExtensions(
+				obsidian.NewObsidian(),
 				&markdownImages{
 					parentPath: filepath.Dir(filepath.Join("/content", path)),
+					callback:   cfg.imageCallback,
 				},
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("rrt"),

@@ -15,15 +15,15 @@ var templates embed.FS
 
 // PageRoute represents a route generated from a page file
 type PageRoute struct {
-	Path         string
-	TemplatePath string
-	GETHandler   string
-	POSTHandler  string
+	Path          string
+	TemplatePath  string
+	GETHandler    string
+	POSTHandler   string
 	DELETEHandler string
-	HasPOST      bool
-	HasDELETE    bool
-	Params       []string
-	Component    string
+	HasPOST       bool
+	HasDELETE     bool
+	Params        []string
+	Component     string
 }
 
 // PagesGenerator handles the code generation for routes
@@ -31,14 +31,16 @@ type PagesGenerator struct {
 	PagesDir    string
 	OutputPath  string
 	PackageName string
+	pagesImport string
 }
 
 // NewPages creates a new Generator instance
-func NewPages(pagesDir, outputPath, packageName string) *PagesGenerator {
+func NewPages(pagesDir, outputPath, packageName, pagesImport string) *PagesGenerator {
 	return &PagesGenerator{
 		PagesDir:    pagesDir,
 		OutputPath:  outputPath,
 		PackageName: packageName,
+		pagesImport: pagesImport,
 	}
 }
 
@@ -153,15 +155,15 @@ func (g *PagesGenerator) parseRouteFromFilename(filename string) (PageRoute, err
 	hasDelete := g.hasHandler(filename, component, "DELETE")
 
 	return PageRoute{
-		Path:         routePath,
-		TemplatePath: filename,
-		GETHandler:   getHandler,
-		POSTHandler:  postHandler,
+		Path:          routePath,
+		TemplatePath:  filename,
+		GETHandler:    getHandler,
+		POSTHandler:   postHandler,
 		DELETEHandler: deleteHandler,
-		HasPOST:      hasPost,
-		HasDELETE:    hasDelete,
-		Params:       params,
-		Component:    component,
+		HasPOST:       hasPost,
+		HasDELETE:     hasDelete,
+		Params:        params,
+		Component:     component,
 	}, nil
 }
 
@@ -203,9 +205,11 @@ func (g *PagesGenerator) generateRouterCode(routes []PageRoute) error {
 
 	data := struct {
 		PackageName string
+		PagesImport string
 		Routes      []PageRoute
 	}{
 		PackageName: g.PackageName,
+		PagesImport: g.pagesImport,
 		Routes:      routes,
 	}
 

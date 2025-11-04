@@ -58,7 +58,11 @@ func Attach(e *echo.Echo, urlprefix string, assetDir string, embedFS embed.FS, e
 
 	fingerprintFS, err := newFFS(inputFS)
 	if err != nil {
-		log.Fatalf("failed to create fingerprinted FS: %s", err.Error())
+		if embedded {
+			log.Fatalf("failed to create embedded fingerprinted FS: %s", err.Error())
+		} else {
+			log.Fatalf("failed to create os fingerprinted FS: %s", err.Error())
+		}
 	}
 
 	// init global variables

@@ -18,9 +18,9 @@ type {{.Name}}Item = content.ContentItem[{{.Name}}]
 
 // Initialize loads all content from the embedded filesystem.
 // This must be called before using any Get* functions.
-func Initialize(e *echo.Echo) error {
+func Initialize(e *echo.Echo, opts ...content.LoadOpt) error {
 	{{- range .Types }}
-	if err := content.LoadItems[{{ .Name }}](FS, "{{ .DirName }}"); err != nil {
+	if err := content.LoadItems[{{ .Name }}](FS, "{{ .DirName }}", opts...); err != nil {
 		return fmt.Errorf("failed to load {{ .Name | lower }}s: %w", err)
 	}
 	{{- end }}

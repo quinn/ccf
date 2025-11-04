@@ -1,4 +1,4 @@
-package main
+package content
 
 import (
 	"flag"
@@ -8,7 +8,7 @@ import (
 	"go.quinn.io/ccf/internal/codegen"
 )
 
-func main() {
+func Main() {
 	contentDir := flag.String("content", "", "Path to content directory")
 	flag.Parse()
 
