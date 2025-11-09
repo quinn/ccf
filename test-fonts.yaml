@@ -1,0 +1,8 @@
+---
+dir: ./example/fonts
+stylesheet: ./example/css/fonts.css
+import: ../fonts/
+fonts:
+  - family: Quicksand
+    variants:
+      - "regular"

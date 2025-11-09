@@ -12,6 +12,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/yuin/goldmark v1.7.13
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
+	go.abhg.dev/goldmark/wikilink v0.6.0
 	golang.org/x/mod v0.20.0
 )
 
@@ -33,7 +34,6 @@ require (
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	go.abhg.dev/goldmark/hashtag v0.4.0 // indirect
 	go.abhg.dev/goldmark/mermaid v0.5.0 // indirect
-	go.abhg.dev/goldmark/wikilink v0.6.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect

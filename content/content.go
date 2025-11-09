@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/adrg/frontmatter"
+	"github.com/alecthomas/chroma/v2/formatters/html"
 	obsidian "github.com/powerman/goldmark-obsidian"
 	"github.com/yuin/goldmark"
 
@@ -91,6 +92,9 @@ func LoadItems[T any](fsys fs.FS, dirName string, opts ...LoadOpt) error {
 			return fmt.Errorf("failed to parse frontmatter in %s: %w", path, err)
 		}
 
+		var htmlWriter bytes.Buffer
+		var cssWriter bytes.Buffer
+
 		// Convert markdown to HTML
 		markdown := goldmark.New(
 			goldmark.WithExtensions(
@@ -101,11 +105,26 @@ func LoadItems[T any](fsys fs.FS, dirName string, opts ...LoadOpt) error {
 				},
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("rrt"),
+					highlighting.WithFormatOptions(html.WithClasses(true), html.WithAllClasses(true)),
+					highlighting.WithCSSWriter(&cssWriter),
+					highlighting.WithGuessLanguage(true),
 				),
 			),
 		)
-		var htmlWriter bytes.Buffer
+
 		markdown.Convert(remainder, &htmlWriter)
+
+		htmlWriter.Write([]byte("<style>"))
+		b, err := cssWriter.WriteTo(&htmlWriter)
+		if err != nil {
+			return fmt.Errorf("failed to write CSS to HTML: %w", err)
+		}
+
+		if b == 0 {
+			slog.Warn("no CSS written")
+		}
+		htmlWriter.Write([]byte("</style>"))
+
 		html := htmlWriter.Bytes()
 
 		// Get relative path without extension for routing

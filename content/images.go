@@ -11,6 +11,7 @@ import (
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
 	"github.com/yuin/goldmark/util"
+	"go.abhg.dev/goldmark/wikilink"
 )
 
 type markdownImages struct {
@@ -21,7 +22,8 @@ type markdownImages struct {
 // Extend implements goldmark.Extender.
 func (e *markdownImages) Extend(m goldmark.Markdown) {
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
-		util.Prioritized(newMarkdownImagesRenderer(e.parentPath, e.callback), 500),
+		// Use priority 100 to override default wikilink renderer (lower number = higher priority)
+		util.Prioritized(newMarkdownImagesRenderer(e.parentPath, e.callback), 100),
 	))
 }
 
@@ -89,7 +91,57 @@ func (r *markdownImagesRenderer) renderImage(w util.BufWriter, source []byte, no
 		elt += ">"
 	}
 
-	elt = r.callback(elt)
+	if r.callback != nil {
+		elt = r.callback(elt)
+	}
+	_, _ = w.WriteString(elt)
+	return ast.WalkSkipChildren, nil
+}
+
+// renderWikilink handles Obsidian embed syntax: ![[image.png]]
+func (r *markdownImagesRenderer) renderWikilink(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
+	if !entering {
+		return ast.WalkContinue, nil
+	}
+
+	link, ok := node.(*wikilink.Node)
+	if !ok || !link.Embed {
+		// Not an embed wikilink, let default renderer handle it
+		return ast.WalkContinue, nil
+	}
+
+	target := string(link.Target)
+	basename := filepath.Base(target)
+
+	// Check if this is an image file
+	ext := strings.ToLower(filepath.Ext(basename))
+	imageExts := map[string]bool{
+		".png": true, ".jpg": true, ".jpeg": true, ".gif": true,
+		".webp": true, ".svg": true, ".bmp": true, ".mp4": true,
+	}
+
+	if !imageExts[ext] {
+		// Not an image, let default renderer handle it
+		return ast.WalkContinue, nil
+	}
+
+	// Render as image
+	elt := ""
+	elt += `<img src="`
+	elt += r.encodeImage([]byte(basename))
+	elt += `" alt="`
+	elt += basename
+	elt += `"`
+
+	if r.XHTML {
+		elt += " />"
+	} else {
+		elt += ">"
+	}
+
+	if r.callback != nil {
+		elt = r.callback(elt)
+	}
 	_, _ = w.WriteString(elt)
 	return ast.WalkSkipChildren, nil
 }
@@ -111,6 +163,7 @@ func nodeToHTMLText(n ast.Node, source []byte) []byte {
 // RegisterFuncs implements renderer.NodeRenderer.
 func (r *markdownImagesRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindImage, r.renderImage)
+	reg.Register(wikilink.Kind, r.renderWikilink)
 }
 
 func newMarkdownImagesRenderer(parentPath string, callback func(imageTag string) string) renderer.NodeRenderer {

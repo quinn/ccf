@@ -46,6 +46,19 @@ description: Test post with various image types
 3. Absolute path: ![absolute](/images/test.png)
 4. Relative path: ![relative](./images/test.jpg)`),
 		},
+		"posts/2023/wikilink-test.md": &fstest.MapFile{
+			Data: []byte(`---
+title: Wikilink Images Test
+date: 2023-05-15
+description: Test post with Obsidian wiki-style image embeds
+---
+# Testing Wikilinks
+
+1. Wiki image: ![[photo.png]]
+2. Wiki image with path: ![[assets/diagram.jpg]]
+3. Non-image wikilink: ![[document.pdf]]
+4. Regular wikilink (not embed): [[another-page]]`),
+		},
 	}
 }
 
@@ -202,5 +215,58 @@ func TestImageURLs(t *testing.T) {
 	expectedPath := "/content/posts/2020/images/test.jpg"
 	if !strings.Contains(imagePost.HTML, `<img src="`+expectedPath+`"`) {
 		t.Errorf("Relative path not properly prefixed. Expected %s in HTML: %s", expectedPath, imagePost.HTML)
+	}
+}
+
+func TestWikilinkImages(t *testing.T) {
+	fsys := setupTestFS()
+
+	// Load items first
+	err := LoadItems[Post](fsys, "posts")
+	if err != nil {
+		t.Fatalf("Failed to load items: %v", err)
+	}
+
+	// Get items for the Post type
+	items, err := GetItems[Post]()
+	if err != nil {
+		t.Fatalf("Failed to get items: %v", err)
+	}
+
+	var wikilinkPost ContentItem[Post]
+	for _, item := range items {
+		if item.Meta.Title == "Wikilink Images Test" {
+			wikilinkPost = item
+			break
+		}
+	}
+
+	if wikilinkPost.Meta.Title == "" {
+		t.Fatal("Could not find Wikilink Images Test post")
+	}
+
+	// Test wiki-style image embed: ![[photo.png]]
+	// Should be rendered as an image with parent path
+	expectedWikiPath := "/content/posts/2023/photo.png"
+	if !strings.Contains(wikilinkPost.HTML, `<img src="`+expectedWikiPath+`"`) {
+		t.Errorf("Wiki-style image not rendered correctly. Expected %s in HTML: %s", expectedWikiPath, wikilinkPost.HTML)
+	}
+
+	// Test wiki-style image with path: ![[assets/diagram.jpg]]
+	// Should extract basename and prefix with parent path
+	expectedWikiPath2 := "/content/posts/2023/diagram.jpg"
+	if !strings.Contains(wikilinkPost.HTML, `<img src="`+expectedWikiPath2+`"`) {
+		t.Errorf("Wiki-style image with path not rendered correctly. Expected %s in HTML: %s", expectedWikiPath2, wikilinkPost.HTML)
+	}
+
+	// Test that alt text is set to the basename
+	if !strings.Contains(wikilinkPost.HTML, `alt="photo.png"`) {
+		t.Error("Wiki-style image alt text not set correctly")
+	}
+
+	// Test that non-image wikilinks are not rendered as images by our handler
+	// (they should be handled by the default wikilink renderer)
+	if strings.Contains(wikilinkPost.HTML, `<img src="/content/posts/2023/document.pdf"`) {
+		t.Error("Non-image wikilink should not be rendered as an image")
 	}
 }
