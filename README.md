@@ -141,8 +141,6 @@ If `styles.css` is fingerprinted to `styles.a1b2c3.css`, the above call automati
 
 ## Content Management
 
----
-
 This guide walks you through setting up each system, with code samples and references to the included `taskfile.yaml` so you can quickly get started.
 
 ---
