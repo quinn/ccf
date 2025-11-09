@@ -467,15 +467,3 @@ You can then run:
 task build
 ```
 to execute all generation steps and build your server binary.
-
----
-
-## Conclusion
-
-**CCF** (Content Creation Framework) provides:
-
-1. **Content System**: Parse frontmatter from Markdown, generate Go data and HTML.
-2. **File-Based Routing**: Turn `.templ` files into Echo routes with zero extra code.
-3. **Assets System**: Serve and fingerprint static files, easily referenced in Templ.
-
-With these features, you can rapidly build content-centric Go apps without repetitive boilerplate. For more advanced examples and usage patterns, explore the `example` directory and the `taskfile.yaml` in this repository. Happy coding!
