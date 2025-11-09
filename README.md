@@ -68,6 +68,77 @@ fonts.css
 }
 ```
 
+---
+
+## 2. Assets System
+
+CCF includes an **assets** package that can optionally fingerprint and embed static files, such as Tailwind CSS or other resources. It rewrites file paths to include a hash for cache-busting.
+
+### 2.1 Project Setup
+
+A typical structure might include:
+
+```
+internal/
+  web/
+    public/
+      styles.css
+      script.js
+```
+
+You can embed or read these files by referencing the directory in Go:
+
+```go
+package web
+
+import (
+    "embed"
+    "github.com/labstack/echo/v4"
+    "go.quinn.io/ccf/assets"
+    "log"
+    "os"
+)
+
+//go:embed public
+var assetsFS embed.FS
+
+func Run() {
+    e := echo.New()
+
+    // Attach the fingerprinted assets.
+    assets.Attach(
+        e,
+        "public",               // URL prefix -> /public
+        "internal/web/public",  // local directory path
+        assetsFS,               // embedded FS
+        os.Getenv("USE_EMBEDDED_ASSETS") == "true",
+    )
+
+    log.Fatal(e.Start(":3000"))
+}
+```
+
+### 2.2 Using Assets in Templates
+
+Inside your `.templ` files, you can reference `assets.Path("filename.css")` to get a fingerprinted path:
+
+```go
+templ Index() {
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <link rel="stylesheet" href={ assets.Path("styles.css") }/>
+    </head>
+    <body>
+        <h1>Hello World!</h1>
+    </body>
+    </html>
+}
+```
+
+If `styles.css` is fingerprinted to `styles.a1b2c3.css`, the above call automatically produces `<link rel="stylesheet" href="/public/styles.a1b2c3.css" />` at runtime.
+
 ## Content Management
 
 ---
@@ -84,11 +155,11 @@ This guide walks you through setting up each system, with code samples and refer
 
 ---
 
-## 1. Content System
+## 3. Content System
 
 The **content system** automatically loads Markdown files with frontmatter, converts them to HTML, and stores them in memory for easy retrieval.
 
-### 1.1 Defining Your Content Struct
+### 3.1 Defining Your Content Struct
 
 In your `content/config.go` (or similar file within your `content` folder), define a struct for your frontmatter fields:
 
@@ -103,7 +174,7 @@ type Post struct {
 }
 ```
 
-### 1.2 Creating Markdown Files
+### 3.2 Creating Markdown Files
 
 Place markdown files under `content/<typeName>/`. For example, if your struct is `Post`, put them in `content/posts/`:
 
@@ -128,7 +199,7 @@ description: "This is a sample post."
 This is my first blog post using **CCF**.
 ```
 
-### 1.3 Generating and Loading Content
+### 3.3 Generating and Loading Content
 
 CCF’s code generator reads your `content/config.go`, finds structs, locates matching directories, and generates a `fs.go` file (or similar) to embed or read those files at runtime.
 
@@ -156,7 +227,7 @@ This will:
 2. Embed or reference all Markdown files in `content/`
 3. Create/update a `fs.go` (or similar) file that your code can import
 
-### 1.4 Using Your Content in Go
+### 3.4 Using Your Content in Go
 
 After generation, CCF provides helpers like `GetPosts()` (if your struct is called `Post`) or a more generic `GetItems[T]()`. For instance:
 
@@ -194,11 +265,11 @@ Below is an updated **Section 2** discussing **automatically generated POST rout
 
 ---
 
-## 2. File/Page-Based Routing
+## 4. File/Page-Based Routing
 
 CCF uses [Templ](https://github.com/a-h/templ) files (`.templ`) to define server-side pages. Each `.templ` file can define zero or more HTTP handlers (e.g., GET, POST). CCF **automatically** generates Echo route handlers so you don’t have to write boilerplate.
 
-### 2.1 Creating a `.templ` Page
+### 4.1 Creating a `.templ` Page
 
 Inside your `pages/` directory, create a file such as `pages/blog.[slug].templ`:
 
@@ -243,7 +314,7 @@ By naming the file `blog.[slug].templ`, you automatically get **two** routes:
 
 If you omit the `BlogSlugPOST` function, then no POST route is generated.
 
-### 2.2 Generating Routes
+### 4.2 Generating Routes
 
 In the **example** `Taskfile.yaml`, there is a `gen-pages` target that runs a script to generate your router code:
 
@@ -276,7 +347,7 @@ func RegisterRoutes(e *echo.Echo) {
 }
 ```
 
-### 2.3 Using the Routes
+### 4.3 Using the Routes
 
 In your main server code, just call the generated registration function:
 
@@ -302,97 +373,6 @@ Depending on which handler is defined in your `.templ` file.
 ---
 
 **Tip**: If your `.templ` file does not define a `POST` function (e.g., `SomethingPOST`), CCF will **not** generate the corresponding POST route. This makes it easy to keep everything in one place while only creating routes you actually need.
-
----
-
-## 3. Assets System
-
-CCF includes an **assets** package that can optionally fingerprint and embed static files, such as Tailwind CSS or other resources. It rewrites file paths to include a hash for cache-busting.
-
-### 3.1 Project Setup
-
-A typical structure might include:
-
-```
-internal/
-  web/
-    public/
-      styles.css
-      script.js
-```
-
-You can embed or read these files by referencing the directory in Go:
-
-```go
-package web
-
-import (
-    "embed"
-    "github.com/labstack/echo/v4"
-    "go.quinn.io/ccf/assets"
-    "log"
-    "os"
-)
-
-//go:embed public
-var assetsFS embed.FS
-
-func Run() {
-    e := echo.New()
-
-    // Attach the fingerprinted assets.
-    assets.Attach(
-        e,
-        "public",               // URL prefix -> /public
-        "internal/web/public",  // local directory path
-        assetsFS,               // embedded FS
-        os.Getenv("USE_EMBEDDED_ASSETS") == "true",
-    )
-
-    log.Fatal(e.Start(":3000"))
-}
-```
-
-### 3.2 Using Assets in Templates
-
-Inside your `.templ` files, you can reference `assets.Path("filename.css")` to get a fingerprinted path:
-
-```go
-templ Index() {
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8"/>
-        <link rel="stylesheet" href={ assets.Path("styles.css") }/>
-    </head>
-    <body>
-        <h1>Hello World!</h1>
-    </body>
-    </html>
-}
-```
-
-If `styles.css` is fingerprinted to `styles.a1b2c3.css`, the above call automatically produces `<link rel="stylesheet" href="/public/styles.a1b2c3.css" />` at runtime.
-
-### 3.3 Tailwind Example
-
-If you use Tailwind, you might have a `tailwind.config.js` and a top-level `tailwind.css` that you compile to `internal/web/public/styles.css`. In the example `taskfile.yaml`, a `gen-tailwind` target shows how to do it:
-
-```yaml
-tasks:
-  gen-tailwind:
-    cmds:
-      - |
-        tailwindcss \
-          -i ./tailwind.css \
-          -o ./internal/web/public/styles.css
-```
-
-Then you can run:
-```bash
-task gen-tailwind
-```
-to compile your CSS. Combined with the fingerprinting approach, your references in templates will always point to the latest hashed file.
 
 ---
 
