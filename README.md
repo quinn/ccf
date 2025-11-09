@@ -1,10 +1,76 @@
 # CCF: Content Creation Framework
 
-**CCF** is a Go-based framework that simplifies building content-driven applications. It provides three main systems:
+**CCF** is a Go-based framework that simplifies building content-driven applications or websites. It provides three main systems:
 
-1. **Content System** for loading and transforming Markdown content (with frontmatter) into Go data and HTML.
-2. **File/Page-Based Routing** for automatically converting `.templ` files into Echo routes.
-3. **Assets System** for serving fingerprinted static files (e.g., CSS, JS) with optional embedding.
+1. **Font Tool** for downloading and installing Google Fonts, and generating CSS the font face css rules.
+2. **Assets System** for serving fingerprinted static files (e.g., CSS, JS) with optional embedding.
+3. **Content System** for loading and transforming Markdown content (with frontmatter) into Go data and HTML.
+4. **File/Page-Based Routing** for automatically converting `.templ` files into Echo routes.
+
+---
+
+## 1. Font Tool
+
+```bash
+$ ccf fonts --help
+Usage of ccf fonts:
+  -config string
+        Path to font configuration file (default "fonts.yaml")
+  -debug
+        Enable debug logging
+  -gfonts-key string
+        Google Fonts API key. (default "GFONTS_KEY" env var)
+```
+
+The **font tool** downloads and installs Google Fonts, and generates CSS rules for the font face.
+
+### 1.1 Defining Your Font Config
+
+Create a file called `fonts.yaml` in the root of your project. It should look like this:
+
+```yaml
+---
+dir: ./example/fonts
+stylesheet: ./example/css/fonts.css
+import: ../fonts/
+fonts:
+  - family: Quicksand
+    variants:
+      - "regular"
+```
+
+### 1.2 Installing Fonts
+
+Run the following command:
+
+```bash
+ccf fonts
+```
+
+This will download the specified fonts and generate CSS rules for them:
+
+```bash
+ls ./example/fonts/
+Quicksand_regular.woff2
+```
+
+```bash
+ls ./example/css/
+fonts.css
+```
+
+```css
+@font-face {
+  font-family: 'Quicksand';
+  font-style: normal;
+  font-weight: 300 700;
+  src: url('../fonts/Quicksand_regular.woff2') format('woff2-variations');
+}
+```
+
+## Content Management
+
+---
 
 This guide walks you through setting up each system, with code samples and references to the included `taskfile.yaml` so you can quickly get started.
 
