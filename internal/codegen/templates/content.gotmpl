@@ -9,29 +9,34 @@ import (
 	"go.quinn.io/ccf/content"
 )
 
-//go:embed {{ .Dirs }}
-var FS embed.FS
-
 {{- range .Types }}
-type {{.Name}}Item = content.ContentItem[{{.Name}}]
-{{- end }}
 
-// Initialize loads all content from the embedded filesystem.
+//go:embed {{ .DirName }}
+var {{ .Name }}FS embed.FS
+
+type {{.Name}}Item content.ContentItem[{{.Name}}]
+
+// Initialize{{ .Name }} loads all {{ .DirName }} content from the embedded filesystem.
 // This must be called before using any Get* functions.
-func Initialize(e *echo.Echo, opts ...content.LoadOpt) error {
-	{{- range .Types }}
-	if err := content.LoadItems[{{ .Name }}](FS, "{{ .DirName }}", opts...); err != nil {
-		return fmt.Errorf("failed to load {{ .Name | lower }}s: %w", err)
+func Initialize{{ .Name }}(e *echo.Echo, opts ...content.LoadOpt) error {
+	if err := content.LoadItems[{{ .Name }}]({{ .Name }}FS, "{{ .DirName }}", opts...); err != nil {
+		return fmt.Errorf("failed to load {{ .DirName }}: %w", err)
 	}
-	{{- end }}
 
-	e.StaticFS("/content", FS)
+	e.StaticFS("/content/{{ .DirName }}", echo.MustSubFS({{ .Name }}FS, "{{ .DirName }}"))
 	return nil
 }
 
-{{- range .Types }}
 // Get{{ .PluralName }} returns all {{ .Name | lower }}s with their metadata and content.
 func Get{{ .PluralName }}() ([]{{ .Name }}Item, error) {
-	return content.GetItems[{{ .Name }}]()
+	items, err := content.GetItems[{{ .Name }}]()
+	if err != nil {
+		return nil, err
+	}
+	var itemsT []{{ .Name }}Item
+	for _, item := range items {
+		itemsT = append(itemsT, {{ .Name }}Item(item))
+	}
+	return itemsT, nil
 }
 {{- end }}

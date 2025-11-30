@@ -39,20 +39,22 @@ func Main() {
 	configPathPtr := flag.String("config", "fonts.yaml", "Path to font configuration file")
 	gfontsKeyPtr := flag.String("gfonts-key", os.Getenv("GFONTS_KEY"), "Google Fonts API key. (default \"GFONTS_KEY\" env var)")
 	debugPtr := flag.Bool("debug", os.Getenv("DEBUG") == "true", "Enable debug logging")
-	flag.Parse()
-	configPath := *configPathPtr
-	gfontsKey := *gfontsKeyPtr
 
-	if gfontsKey == "" {
-		slog.Error("GFONTS_KEY env var or -gfonts-key flag not set")
-		os.Exit(1)
-	}
+	flag.Parse()
 
 	if *debugPtr {
 		h := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		})
 		slog.SetDefault(slog.New(h))
+	}
+
+	configPath := *configPathPtr
+	gfontsKey := *gfontsKeyPtr
+
+	if gfontsKey == "" {
+		slog.Error("GFONTS_KEY env var or -gfonts-key flag not set")
+		os.Exit(1)
 	}
 
 	slog.Debug("Reading font configuration", "path", configPath)

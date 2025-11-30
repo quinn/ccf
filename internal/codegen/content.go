@@ -5,6 +5,7 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,6 +17,7 @@ type ContentType struct {
 	PluralName string
 	Fields     []*ast.Field
 	DirName    string // The actual directory name found
+	Config     string // The config string found in the doc
 }
 
 type ContentGenerator struct {
@@ -35,26 +37,90 @@ func (g *ContentGenerator) parseContentTypes(configPath string) ([]ContentType, 
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
+	f := node
+
 	var types []ContentType
-	ast.Inspect(node, func(n ast.Node) bool {
-		if typeSpec, ok := n.(*ast.TypeSpec); ok {
-			if structType, ok := typeSpec.Type.(*ast.StructType); ok {
-				types = append(types, ContentType{
-					Name:       typeSpec.Name.Name,
-					PluralName: typeSpec.Name.Name,
-					Fields:     structType.Fields.List,
-				})
-			}
+	for _, d := range f.Decls {
+		gDecl, ok := d.(*ast.GenDecl)
+		if !ok || gDecl.Tok != token.TYPE {
+			continue
 		}
-		return true
-	})
+
+		for _, sp := range gDecl.Specs {
+			tSpec, ok := sp.(*ast.TypeSpec)
+			if !ok {
+				continue
+			}
+			tStruct, ok := tSpec.Type.(*ast.StructType)
+			if !ok {
+				continue
+			}
+
+			// Prefer the spec’s own doc, else the decl’s doc.
+			conf := make(map[string]string)
+			if gDecl.Doc != nil {
+				doc := strings.TrimSpace(gDecl.Doc.Text())
+				slog.Debug("Found struct doc", "name", tSpec.Name.Name, "doc", doc)
+
+				strs := strings.Split(doc, ":")
+				for i, s := range strs {
+					if s == "ccf" {
+						if len(strs) < i+1 {
+							return nil, fmt.Errorf("incorrect struct doc format: %s", doc)
+						}
+
+						confStr := strings.Trim(strs[i+1], "\"")
+
+						slog.Debug("Found struct doc", "name", tSpec.Name.Name, "doc", doc, "conf", confStr)
+
+						for s := range strings.SplitSeq(confStr, " ") {
+							kv := strings.Split(s, "=")
+							if len(kv) != 2 {
+								return nil, fmt.Errorf("incorrect struct doc format: %s", doc)
+							}
+							conf[kv[0]] = kv[1]
+						}
+						break
+					}
+				}
+			}
+
+			slog.Debug("Found struct", "name", tSpec.Name.Name, "conf", conf)
+
+			types = append(types, ContentType{
+				Name:       tSpec.Name.Name,
+				PluralName: tSpec.Name.Name,
+				Fields:     tStruct.Fields.List,
+				DirName:    conf["dir"],
+			})
+		}
+	}
+
+	// var types []ContentType
+	// ast.Inspect(node, func(n ast.Node) bool {
+	// 	if typeSpec, ok := n.(*ast.TypeSpec); ok {
+	// 		if structType, ok := typeSpec.Type.(*ast.StructType); ok {
+	// 			slog.Debug("Found struct type", "structType", structType, "comments", typeSpec.Doc)
+	// 			types = append(types, ContentType{
+	// 				Name:       typeSpec.Name.Name,
+	// 				PluralName: typeSpec.Name.Name,
+	// 				Fields:     structType.Fields.List,
+	// 			})
+	// 		}
+	// 	}
+	// 	return true
+	// })
 
 	return types, nil
 }
 
-func (g *ContentGenerator) findMatchingDir(typeName string, entries []os.DirEntry) (string, bool) {
-	singular := strings.ToLower(typeName)
+func (g *ContentGenerator) findMatchingDir(t ContentType, entries []os.DirEntry) (string, bool) {
+	singular := strings.ToLower(t.Name)
 	plural := singular + "s"
+
+	if t.DirName != "" {
+		return t.DirName, strings.HasSuffix(t.DirName, "s")
+	}
 
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -81,11 +147,11 @@ func (g *ContentGenerator) getContentDirs(types []ContentType) ([]ContentType, e
 	}
 
 	// Find matching directories for each type
-	for i := range types {
-		dirName, isPlural := g.findMatchingDir(types[i].Name, entries)
+	for i, t := range types {
+		dirName, isPlural := g.findMatchingDir(t, entries)
 		types[i].DirName = dirName
 		if isPlural {
-			types[i].PluralName = types[i].Name + "s"
+			types[i].PluralName = t.Name + "s"
 		}
 	}
 
@@ -108,6 +174,8 @@ func (g *ContentGenerator) Generate() error {
 	if err != nil {
 		return fmt.Errorf("failed to get content directories: %w", err)
 	}
+
+	slog.Debug("Found content directories", "types", types)
 
 	// Create space-separated list of directories for embed directive
 	var dirs []string

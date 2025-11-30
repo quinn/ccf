@@ -3,8 +3,10 @@ package content
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -15,22 +17,29 @@ import (
 )
 
 type markdownImages struct {
-	parentPath string
-	callback   func(imageTag string) string
+	parentPath  string
+	callback    func(imageTag string) string
+	resolveLink func(target string) string
 }
 
 // Extend implements goldmark.Extender.
 func (e *markdownImages) Extend(m goldmark.Markdown) {
 	m.Renderer().AddOptions(renderer.WithNodeRenderers(
 		// Use priority 100 to override default wikilink renderer (lower number = higher priority)
-		util.Prioritized(newMarkdownImagesRenderer(e.parentPath, e.callback), 100),
+		util.Prioritized(newMarkdownImagesRenderer(e.parentPath, e.callback, e.resolveLink), 100),
 	))
 }
 
 type markdownImagesRenderer struct {
 	html.Config
-	parentPath string
-	callback   func(imageTag string) string
+	parentPath  string
+	callback    func(imageTag string) string
+	resolveLink func(target string) string
+
+	// hasDest records whether a node had a destination when we resolved
+	// it. This is needed to decide whether a closing </a> must be added
+	// when exiting a Node render.
+	hasDest sync.Map // *Node => struct{}
 }
 
 func (r *markdownImagesRenderer) encodeImage(src []byte) string {
@@ -100,13 +109,32 @@ func (r *markdownImagesRenderer) renderImage(w util.BufWriter, source []byte, no
 
 // renderWikilink handles Obsidian embed syntax: ![[image.png]]
 func (r *markdownImagesRenderer) renderWikilink(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
-	if !entering {
-		return ast.WalkContinue, nil
+	link, ok := node.(*wikilink.Node)
+	if !ok {
+		return ast.WalkStop, fmt.Errorf("unexpected node %T, expected *wikilink.Node", node)
 	}
 
-	link, ok := node.(*wikilink.Node)
-	if !ok || !link.Embed {
-		// Not an embed wikilink, let default renderer handle it
+	if entering {
+		return r.enterWikilink(w, link)
+	}
+
+	r.exitWikilink(w, link)
+	return ast.WalkContinue, nil
+}
+
+// renderWikilink handles Obsidian embed syntax: ![[image.png]]
+func (r *markdownImagesRenderer) exitWikilink(w util.BufWriter, link *wikilink.Node) {
+	if _, ok := r.hasDest.LoadAndDelete(link); ok {
+		_, _ = w.WriteString("</a>")
+	}
+}
+
+func (r *markdownImagesRenderer) enterWikilink(w util.BufWriter, link *wikilink.Node) (ast.WalkStatus, error) {
+	if !link.Embed {
+		r.hasDest.Store(link, struct{}{})
+		_, _ = w.WriteString(`<a href="`)
+		_, _ = w.Write(util.URLEscape([]byte(r.resolveLink(string(link.Target))), true /* resolve references */))
+		_, _ = w.WriteString(`">`)
 		return ast.WalkContinue, nil
 	}
 
@@ -166,9 +194,10 @@ func (r *markdownImagesRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegi
 	reg.Register(wikilink.Kind, r.renderWikilink)
 }
 
-func newMarkdownImagesRenderer(parentPath string, callback func(imageTag string) string) renderer.NodeRenderer {
+func newMarkdownImagesRenderer(parentPath string, callback func(imageTag string) string, resolveLink func(target string) string) renderer.NodeRenderer {
 	return &markdownImagesRenderer{
-		parentPath: parentPath,
-		callback:   callback,
+		parentPath:  parentPath,
+		callback:    callback,
+		resolveLink: resolveLink,
 	}
 }

@@ -7,6 +7,7 @@ toolchain go1.24.4
 require (
 	github.com/a-h/templ v0.2.793
 	github.com/adrg/frontmatter v0.2.0
+	github.com/alecthomas/chroma/v2 v2.2.0
 	github.com/labstack/echo/v4 v4.12.0
 	github.com/powerman/goldmark-obsidian v0.1.4
 	github.com/stretchr/testify v1.10.0
@@ -14,11 +15,12 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/wikilink v0.6.0
 	golang.org/x/mod v0.20.0
+	golang.org/x/text v0.19.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
-	github.com/alecthomas/chroma/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/forPelevin/gomoji v1.3.1 // indirect
@@ -37,8 +39,6 @@ require (
 	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

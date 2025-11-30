@@ -25,6 +25,10 @@ type ContentItem[T any] struct {
 	Slug    string
 }
 
+type ContentMeta[T any] struct {
+	Meta func() T
+}
+
 var store = make(map[reflect.Type]any)
 
 // GetItems returns all content items for a given type T.
@@ -42,6 +46,7 @@ func GetItems[T any]() ([]ContentItem[T], error) {
 
 type loadConfig struct {
 	imageCallback func(imageTag string) string
+	resolveLink   func(target string) string
 }
 
 type LoadOpt func(*loadConfig)
@@ -49,6 +54,12 @@ type LoadOpt func(*loadConfig)
 func ImagePostProcess(imageCallback func(imageTag string) string) LoadOpt {
 	return func(config *loadConfig) {
 		config.imageCallback = imageCallback
+	}
+}
+
+func ResolveLink(resolveLink func(target string) string) LoadOpt {
+	return func(config *loadConfig) {
+		config.resolveLink = resolveLink
 	}
 }
 
@@ -100,8 +111,9 @@ func LoadItems[T any](fsys fs.FS, dirName string, opts ...LoadOpt) error {
 			goldmark.WithExtensions(
 				obsidian.NewObsidian(),
 				&markdownImages{
-					parentPath: filepath.Dir(filepath.Join("/content", path)),
-					callback:   cfg.imageCallback,
+					parentPath:  filepath.Dir(filepath.Join("/content", path)),
+					callback:    cfg.imageCallback,
+					resolveLink: cfg.resolveLink,
 				},
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("rrt"),
