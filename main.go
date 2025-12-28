@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"go.quinn.io/ccf/cmd/esm"
 	"go.quinn.io/ccf/cmd/fonts"
 	"go.quinn.io/ccf/cmd/generate/content"
 	"go.quinn.io/ccf/cmd/generate/pages"
@@ -25,6 +26,8 @@ func main() {
 		pages.Main()
 	case "fonts":
 		fonts.Main()
+	case "esm":
+		esm.Main()
 	default:
 		log.Fatalf("unknown command: %s", cmd)
 	}

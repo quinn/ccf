@@ -15,6 +15,7 @@ import (
 	"github.com/yuin/goldmark"
 
 	highlighting "github.com/yuin/goldmark-highlighting/v2"
+	alertcallouts "github.com/zmtcreative/gm-alert-callouts"
 )
 
 // ContentItem represents a single content item with its metadata and rendered content
@@ -109,6 +110,7 @@ func LoadItems[T any](fsys fs.FS, dirName string, opts ...LoadOpt) error {
 		// Convert markdown to HTML
 		markdown := goldmark.New(
 			goldmark.WithExtensions(
+				alertcallouts.NewAlertCallouts(),
 				obsidian.NewObsidian(),
 				&markdownImages{
 					parentPath:  filepath.Dir(filepath.Join("/content", path)),

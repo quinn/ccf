@@ -1,0 +1,9 @@
+esm-vendor:
+  output: public/js/vendor
+  import: ./js/vendor
+  modules:
+    - name: confetti
+      url: https://esm.sh/canvas-confetti@1.6.0
+  template:
+    input: index.html.tpl
+    output: public/index.html

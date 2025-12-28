@@ -1,11 +1,12 @@
 # CCF: Content Creation Framework
 
-**CCF** is a Go-based framework that simplifies building content-driven applications or websites. It provides three main systems:
+**CCF** is a Go-based framework that simplifies building content-driven applications or websites. It provides five main systems:
 
 1. **Font Tool** for downloading and installing Google Fonts, and generating CSS the font face css rules.
-2. **Assets System** for serving fingerprinted static files (e.g., CSS, JS) with optional embedding.
-3. **Content System** for loading and transforming Markdown content (with frontmatter) into Go data and HTML.
-4. **File/Page-Based Routing** for automatically converting `.templ` files into Echo routes.
+2. **ESM Vendor** for downloading and bundling ESM modules with automatic import map generation.
+3. **Assets System** for serving fingerprinted static files (e.g., CSS, JS) with optional embedding.
+4. **Content System** for loading and transforming Markdown content (with frontmatter) into Go data and HTML.
+5. **File/Page-Based Routing** for automatically converting `.templ` files into Echo routes.
 
 ---
 
@@ -70,11 +71,68 @@ fonts.css
 
 ---
 
-## 2. Assets System
+## 2. ESM Vendor
+
+```bash
+$ ccf esm --help
+Usage of ccf esm:
+  -config string
+        Config file path (default "ccf.yaml")
+```
+
+The **ESM vendor tool** downloads ES modules from CDNs (like esm.sh), bundles their dependencies, and generates an import map for local serving.
+
+### 2.1 Defining Your ESM Config
+
+Create a config file (e.g., `esm.yaml`):
+
+```yaml
+esm-vendor:
+  output: public/js/vendor
+  import: ./js/vendor
+  modules:
+    - name: confetti
+      url: https://esm.sh/canvas-confetti@1.6.0
+  template:
+    input: index.html.tpl
+    output: public/index.html
+```
+
+### 2.2 Vendoring Modules
+
+Run:
+
+```bash
+ccf esm -config esm.yaml
+```
+
+This downloads the modules, their dependencies, and generates `public/js/vendor/importmap.json`. If a template is specified, it processes the template with the import map injected as `{{.importmap}}`.
+
+### 2.3 Using in HTML
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script type="importmap">{{.importmap}}</script>
+</head>
+<body>
+  <button id="fire">🎉</button>
+  <script type="module">
+    import confetti from 'confetti';
+    document.getElementById('fire').onclick = () => confetti();
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 3. Assets System
 
 CCF includes an **assets** package that can optionally fingerprint and embed static files, such as Tailwind CSS or other resources. It rewrites file paths to include a hash for cache-busting.
 
-### 2.1 Project Setup
+### 3.1 Project Setup
 
 A typical structure might include:
 
@@ -118,7 +176,7 @@ func Run() {
 }
 ```
 
-### 2.2 Using Assets in Templates
+### 3.2 Using Assets in Templates
 
 Inside your `.templ` files, you can reference `assets.Path("filename.css")` to get a fingerprinted path:
 
@@ -153,11 +211,11 @@ This guide walks you through setting up each system, with code samples and refer
 
 ---
 
-## 3. Content System
+## 4. Content System
 
 The **content system** automatically loads Markdown files with frontmatter, converts them to HTML, and stores them in memory for easy retrieval.
 
-### 3.1 Defining Your Content Struct
+### 4.1 Defining Your Content Struct
 
 In your `content/config.go` (or similar file within your `content` folder), define a struct for your frontmatter fields:
 
@@ -172,7 +230,7 @@ type Post struct {
 }
 ```
 
-### 3.2 Creating Markdown Files
+### 4.2 Creating Markdown Files
 
 Place markdown files under `content/<typeName>/`. For example, if your struct is `Post`, put them in `content/posts/`:
 
@@ -197,7 +255,7 @@ description: "This is a sample post."
 This is my first blog post using **CCF**.
 ```
 
-### 3.3 Generating and Loading Content
+### 4.3 Generating and Loading Content
 
 CCF’s code generator reads your `content/config.go`, finds structs, locates matching directories, and generates a `fs.go` file (or similar) to embed or read those files at runtime.
 
@@ -225,7 +283,7 @@ This will:
 2. Embed or reference all Markdown files in `content/`
 3. Create/update a `fs.go` (or similar) file that your code can import
 
-### 3.4 Using Your Content in Go
+### 4.4 Using Your Content in Go
 
 After generation, CCF provides helpers like `GetPosts()` (if your struct is called `Post`) or a more generic `GetItems[T]()`. For instance:
 
@@ -263,11 +321,11 @@ Below is an updated **Section 2** discussing **automatically generated POST rout
 
 ---
 
-## 4. File/Page-Based Routing
+## 5. File/Page-Based Routing
 
 CCF uses [Templ](https://github.com/a-h/templ) files (`.templ`) to define server-side pages. Each `.templ` file can define zero or more HTTP handlers (e.g., GET, POST). CCF **automatically** generates Echo route handlers so you don’t have to write boilerplate.
 
-### 4.1 Creating a `.templ` Page
+### 5.1 Creating a `.templ` Page
 
 Inside your `pages/` directory, create a file such as `pages/blog.[slug].templ`:
 
@@ -312,7 +370,7 @@ By naming the file `blog.[slug].templ`, you automatically get **two** routes:
 
 If you omit the `BlogSlugPOST` function, then no POST route is generated.
 
-### 4.2 Generating Routes
+### 5.2 Generating Routes
 
 In the **example** `Taskfile.yaml`, there is a `gen-pages` target that runs a script to generate your router code:
 
@@ -345,7 +403,7 @@ func RegisterRoutes(e *echo.Echo) {
 }
 ```
 
-### 4.3 Using the Routes
+### 5.3 Using the Routes
 
 In your main server code, just call the generated registration function:
 
@@ -373,6 +431,8 @@ Depending on which handler is defined in your `.templ` file.
 **Tip**: If your `.templ` file does not define a `POST` function (e.g., `SomethingPOST`), CCF will **not** generate the corresponding POST route. This makes it easy to keep everything in one place while only creating routes you actually need.
 
 ---
+
+
 
 ## Putting It All Together
 
