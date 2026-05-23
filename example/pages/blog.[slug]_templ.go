@@ -8,9 +8,9 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/labstack/echo/v4"
+import "github.com/labstack/echo/v5"
 
-func BlogSlugGET(c echo.Context, slug string) (string, error) {
+func BlogSlugGET(c *echo.Context, slug string) (string, error) {
 	return slug, nil
 }
 

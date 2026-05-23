@@ -10,22 +10,30 @@ import (
 )
 
 //go:embed posts
-var FS embed.FS
+var PostFS embed.FS
 
-type PostItem = content.ContentItem[Post]
+type PostItem content.ContentItem[Post]
 
-// Initialize loads all content from the embedded filesystem.
+// InitializePost loads all posts content from the embedded filesystem.
 // This must be called before using any Get* functions.
-func Initialize(e *echo.Echo) error {
-	if err := content.LoadItems[Post](FS, "posts"); err != nil {
+func InitializePost(e *echo.Echo, opts ...content.LoadOpt) error {
+	if err := content.LoadItems[Post](PostFS, "posts", opts...); err != nil {
 		return fmt.Errorf("failed to load posts: %w", err)
 	}
 
-	e.StaticFS("/content", FS)
+	e.StaticFS("/content/posts", echo.MustSubFS(PostFS, "posts"))
 	return nil
 }
 
 // GetPosts returns all posts with their metadata and content.
 func GetPosts() ([]PostItem, error) {
-	return content.GetItems[Post]()
+	items, err := content.GetItems[Post]()
+	if err != nil {
+		return nil, err
+	}
+	var itemsT []PostItem
+	for _, item := range items {
+		itemsT = append(itemsT, PostItem(item))
+	}
+	return itemsT, nil
 }

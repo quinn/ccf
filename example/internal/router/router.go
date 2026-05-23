@@ -2,7 +2,7 @@
 package router
 
 import (
-	"ccf/example/pages"
+	pages "ccf/example/pages"
 
 	"github.com/labstack/echo/v5"
 )

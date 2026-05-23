@@ -21,7 +21,7 @@ tasks:
           -pages pages \
           -output internal/router/router.go \
           -package router
-      - task gen-templ
+      - go run github.com/go-task/task/v3/cmd/task@latest gen-templ
       - goimports -w internal/router/router.go
 
   live:pages:
@@ -29,7 +29,7 @@ tasks:
       - figlet "Generating pages..."
       - |
         go run github.com/cosmtrek/air@v1.51.0 \
-          --build.cmd "task gen-pages" \
+          --build.cmd "go run github.com/go-task/task/v3/cmd/task@latest gen-pages" \
           --build.bin "true" \
           --build.delay "100" \
           --build.exclude_dir "" \
@@ -47,7 +47,7 @@ tasks:
       - figlet "Generating content..."
       - |
         go run github.com/cosmtrek/air@v1.51.0 \
-          --build.cmd "task gen-content" \
+          --build.cmd "go run github.com/go-task/task/v3/cmd/task@latest gen-content" \
           --build.bin "true" \
           --build.delay "100" \
           --build.exclude_dir "" \

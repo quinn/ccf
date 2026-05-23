@@ -9,11 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"go.quinn.io/ccf/assets"
 )
 
-func IndexGET(c echo.Context) ([]map[string]string, error) {
+func IndexGET(c *echo.Context) ([]map[string]string, error) {
 	return []map[string]string{
 		{"title": "First Blog Post", "slug": "first-post"},
 		{"title": "Second Blog Post", "slug": "second-post"},
