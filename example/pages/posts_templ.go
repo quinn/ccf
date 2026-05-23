@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"ccf/example/content"
 	"github.com/labstack/echo/v5"
-	"go.quinn.io/ccf/assets"
+	"go.quinn.io/ccf/v2/assets"
 )
 
 func PostsGET(c *echo.Context) ([]content.PostItem, error) {

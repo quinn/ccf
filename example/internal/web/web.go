@@ -21,8 +21,8 @@ func Run() {
 	// Load content before starting server
 
 	e := echo.New()
-	e.Use(middleware.Logger())
-	content.Initialize(e)
+	e.Use(middleware.RequestLogger())
+	content.InitializePost(e)
 
 	// Register routes from generated code
 	router.RegisterRoutes(e)

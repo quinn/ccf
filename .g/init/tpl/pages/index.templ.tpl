@@ -1,12 +1,12 @@
 package pages
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"go.quinn.io/ccf/assets"
 	"{{ .mod }}/content"
 )
 
-func IndexHandler(c echo.Context) ([]content.PostItem, error) {
+func IndexHandler(c *echo.Context) ([]content.PostItem, error) {
 	// Get items for a specific type
 	return content.GetPosts()
 }

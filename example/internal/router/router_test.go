@@ -1,13 +1,21 @@
 package router
 
 import (
+	"embed"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
+	"go.quinn.io/ccf/v2/assets"
 )
+
+func TestMain(m *testing.M) {
+	e := echo.New()
+	assets.Attach(e, "public", "../../internal/web/public", embed.FS{}, false)
+	m.Run()
+}
 
 func TestIndexHandler(t *testing.T) {
 	// Setup
@@ -32,7 +40,7 @@ func TestBlogSlugHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/blog/test-post", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPathValues(echo.PathValues{"slug": "test-post"})
+	c.SetPathValues(echo.PathValues{{Name: "slug", Value: "test-post"}})
 
 	// Test
 	err := BlogSlugGET(c)
@@ -63,9 +71,9 @@ func TestRegisterRoutes(t *testing.T) {
 	// Verify all expected routes are registered
 	foundRoutes := make(map[string]bool)
 	for _, r := range routes {
-		if method, exists := expectedRoutes[r.Path()]; exists {
-			assert.Equal(t, method, r.Method(), "Unexpected method for route %s", r.Path())
-			foundRoutes[r.Path()] = true
+		if method, exists := expectedRoutes[r.Path]; exists {
+			assert.Equal(t, method, r.Method, "Unexpected method for route %s", r.Path)
+			foundRoutes[r.Path] = true
 		}
 	}
 

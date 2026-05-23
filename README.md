@@ -62,10 +62,10 @@ fonts.css
 
 ```css
 @font-face {
-  font-family: 'Quicksand';
+  font-family: "Quicksand";
   font-style: normal;
   font-weight: 300 700;
-  src: url('../fonts/Quicksand_regular.woff2') format('woff2-variations');
+  src: url("../fonts/Quicksand_regular.woff2") format("woff2-variations");
 }
 ```
 
@@ -113,16 +113,18 @@ This downloads the modules, their dependencies, and generates `public/js/vendor/
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <script type="importmap">{{.importmap}}</script>
-</head>
-<body>
-  <button id="fire">🎉</button>
-  <script type="module">
-    import confetti from 'confetti';
-    document.getElementById('fire').onclick = () => confetti();
-  </script>
-</body>
+  <head>
+    <script type="importmap">
+      {{.importmap}}
+    </script>
+  </head>
+  <body>
+    <button id="fire">🎉</button>
+    <script type="module">
+      import confetti from "confetti";
+      document.getElementById("fire").onclick = () => confetti();
+    </script>
+  </body>
 </html>
 ```
 
@@ -151,7 +153,7 @@ package web
 
 import (
     "embed"
-    "github.com/labstack/echo/v4"
+    "github.com/labstack/echo/v5"
     "go.quinn.io/ccf/assets"
     "log"
     "os"
@@ -274,9 +276,11 @@ tasks:
 ```
 
 You can run:
+
 ```bash
 task gen-content
 ```
+
 This will:
 
 1. Parse your `content/config.go`
@@ -317,6 +321,7 @@ func main() {
 The system stores both the **raw Markdown** and the **rendered HTML** (with code highlighting, relative image rewriting, etc.), making it convenient to display in your templates.
 
 ---
+
 Below is an updated **Section 2** discussing **automatically generated POST routes** alongside GET routes.
 
 ---
@@ -332,17 +337,17 @@ Inside your `pages/` directory, create a file such as `pages/blog.[slug].templ`:
 ```go
 package pages
 
-import "github.com/labstack/echo/v4"
+import "github.com/labstack/echo/v5"
 
 // The "GET" function that runs before rendering the GET template
-func BlogSlugGET(c echo.Context, slug string) (string, error) {
+func BlogSlugGET(c *echo.Context, slug string) (string, error) {
     // Return the data that the template needs
     return slug, nil
 }
 
 // Optionally, you can define a POST handler in the same file.
 // The generator will pick it up and create a POST route automatically.
-func BlogSlugPOST(c echo.Context, slug string) error {
+func BlogSlugPOST(c *echo.Context, slug string) error {
     // Add your logic for creating/updating data here
     // e.g. read form values, save to a DB, etc.
     return nil
@@ -365,6 +370,7 @@ templ BlogSlug(slug string) {
 ```
 
 By naming the file `blog.[slug].templ`, you automatically get **two** routes:
+
 - **GET** `/blog/:slug` (via `BlogSlugGET`)
 - **POST** `/blog/:slug` (via `BlogSlugPOST`, if defined)
 
@@ -389,9 +395,11 @@ tasks:
 ```
 
 Running:
+
 ```bash
 task gen-pages
 ```
+
 will scan the `pages/` directory, find `.templ` files (and their handlers), and generate a file such as `internal/router/router.go`. This file contains **both** GET and POST routes if you’ve defined them in the `.templ`:
 
 ```go
@@ -409,7 +417,7 @@ In your main server code, just call the generated registration function:
 
 ```go
 import (
-    "github.com/labstack/echo/v4"
+    "github.com/labstack/echo/v5"
     "myproject/internal/router"
 )
 
@@ -421,6 +429,7 @@ func main() {
 ```
 
 Now requests to:
+
 - **GET** `/blog/my-article` → calls `BlogSlugGET`
 - **POST** `/blog/my-article` → calls `BlogSlugPOST`
 
@@ -431,8 +440,6 @@ Depending on which handler is defined in your `.templ` file.
 **Tip**: If your `.templ` file does not define a `POST` function (e.g., `SomethingPOST`), CCF will **not** generate the corresponding POST route. This makes it easy to keep everything in one place while only creating routes you actually need.
 
 ---
-
-
 
 ## Putting It All Together
 
@@ -471,6 +478,7 @@ task gen-templ
 ```bash
 go run cmd/main.go
 ```
+
 Now open [http://localhost:3000/](http://localhost:3000/) to see your pages.
 
 ---
@@ -480,7 +488,7 @@ Now open [http://localhost:3000/](http://localhost:3000/) to see your pages.
 Below is an excerpt from the **example/taskfile.yaml** that you can adapt:
 
 ```yaml
-version: '3'
+version: "3"
 
 tasks:
   gen-templ:
@@ -523,7 +531,9 @@ tasks:
 ```
 
 You can then run:
+
 ```bash
 task build
 ```
+
 to execute all generation steps and build your server binary.
