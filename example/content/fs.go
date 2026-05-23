@@ -5,12 +5,13 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/labstack/echo/v4"
-	"go.quinn.io/ccf/content"
+	"github.com/labstack/echo/v5"
+	"go.quinn.io/ccf/v2/content"
 )
 
 //go:embed posts
 var FS embed.FS
+
 type PostItem = content.ContentItem[Post]
 
 // Initialize loads all content from the embedded filesystem.
@@ -23,6 +24,7 @@ func Initialize(e *echo.Echo) error {
 	e.StaticFS("/content", FS)
 	return nil
 }
+
 // GetPosts returns all posts with their metadata and content.
 func GetPosts() ([]PostItem, error) {
 	return content.GetItems[Post]()

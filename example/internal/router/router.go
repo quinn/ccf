@@ -2,8 +2,9 @@
 package router
 
 import (
-	"github.com/labstack/echo/v4"
-	"go.quinn.io/ccf/example/pages"
+	"ccf/example/pages"
+
+	"github.com/labstack/echo/v5"
 )
 
 // RegisterRoutes adds all page routes to the Echo instance
@@ -15,33 +16,33 @@ func RegisterRoutes(e *echo.Echo) {
 }
 
 // BlogSlugGET handles GET requests to /blog/:slug
-func BlogSlugGET(c echo.Context) error {
+func BlogSlugGET(c *echo.Context) error {
 	result, err := pages.BlogSlugGET(c, c.Param("slug"))
 	if err != nil {
 		return err
 	}
-	return pages.BlogSlug(result).Render(c.Request().Context(), c.Response().Writer)
+	return pages.BlogSlug(result).Render(c.Request().Context(), c.Response())
 }
 
 // IndexGET handles GET requests to /
-func IndexGET(c echo.Context) error {
+func IndexGET(c *echo.Context) error {
 	result, err := pages.IndexGET(c)
 	if err != nil {
 		return err
 	}
-	return pages.Index(result).Render(c.Request().Context(), c.Response().Writer)
+	return pages.Index(result).Render(c.Request().Context(), c.Response())
 }
 
 // PostsGET handles GET requests to /posts
-func PostsGET(c echo.Context) error {
+func PostsGET(c *echo.Context) error {
 	result, err := pages.PostsGET(c)
 	if err != nil {
 		return err
 	}
-	return pages.Posts(result).Render(c.Request().Context(), c.Response().Writer)
+	return pages.Posts(result).Render(c.Request().Context(), c.Response())
 }
 
 // PostsPOST handles POST requests to /posts
-func PostsPOST(c echo.Context) error {
+func PostsPOST(c *echo.Context) error {
 	return pages.PostsPOST(c)
 }

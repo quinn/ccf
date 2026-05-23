@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"go.quinn.io/ccf/esm"
+	"go.quinn.io/ccf/v2/esm"
 	"gopkg.in/yaml.v3"
 )
 

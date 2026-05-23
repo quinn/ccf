@@ -1,17 +1,17 @@
 package pages
 
 import (
-	"github.com/labstack/echo/v4"
+	"ccf/example/content"
+	"github.com/labstack/echo/v5"
 	"go.quinn.io/ccf/assets"
-	"go.quinn.io/ccf/example/content"
 )
 
-func PostsGET(c echo.Context) ([]content.PostItem, error) {
+func PostsGET(c *echo.Context) ([]content.PostItem, error) {
 	// Get items for a specific type
 	return content.GetPosts()
 }
 
-func PostsPOST(c echo.Context) error {
+func PostsPOST(c *echo.Context) error {
 	// post back to create a new item
 	return nil
 }

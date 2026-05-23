@@ -6,11 +6,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"go.quinn.io/ccf/assets"
-	"go.quinn.io/ccf/example/content"
-	"go.quinn.io/ccf/example/internal/router"
+	"ccf/example/content"
+	"ccf/example/internal/router"
+
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"go.quinn.io/ccf/v2/assets"
 )
 
 //go:embed public

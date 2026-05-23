@@ -11,7 +11,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 // Previously I've managed this in middleware and context.
@@ -27,11 +27,11 @@ var ffs *fingerprintedFS
 // 	)
 // }
 
-func StaticFSWithHeader(e *echo.Echo, pathPrefix string, filesystem fs.FS) *echo.Route {
+func StaticFSWithHeader(e *echo.Echo, pathPrefix string, filesystem fs.FS) echo.RouteInfo {
 	originalHandler := echo.StaticDirectoryHandler(filesystem, false)
 
 	// Wrap the original handler
-	wrappedHandler := func(c echo.Context) error {
+	wrappedHandler := func(c *echo.Context) error {
 		// Check if the requested file is 'service-worker.js'
 		if strings.Contains(c.Request().URL.Path, "service-worker") {
 			c.Response().Header().Set("Service-Worker-Allowed", "/")
@@ -72,7 +72,7 @@ func Attach(e *echo.Echo, urlprefix string, assetDir string, embedFS embed.FS, e
 	// e.StaticFS("/"+prefix, fingerprintFS)
 	StaticFSWithHeader(e, prefix, fingerprintFS)
 
-	e.GET("/"+prefix+"/asset-manifest.json", func(c echo.Context) error {
+	e.GET("/"+prefix+"/asset-manifest.json", func(c *echo.Context) error {
 		manifest, err := fingerprintFS.Manifest()
 		if err != nil {
 			return fmt.Errorf("failed to get asset manifest: %w", err)

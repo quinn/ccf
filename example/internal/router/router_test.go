@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,9 +32,7 @@ func TestBlogSlugHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/blog/test-post", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/blog/:slug")
-	c.SetParamNames("slug")
-	c.SetParamValues("test-post")
+	c.SetPathValues(echo.PathValues{"slug": "test-post"})
 
 	// Test
 	err := BlogSlugGET(c)
@@ -54,7 +52,7 @@ func TestRegisterRoutes(t *testing.T) {
 	RegisterRoutes(e)
 
 	// Get registered routes
-	routes := e.Routes()
+	routes := e.Router().Routes()
 
 	// Expected routes
 	expectedRoutes := map[string]string{
@@ -65,9 +63,9 @@ func TestRegisterRoutes(t *testing.T) {
 	// Verify all expected routes are registered
 	foundRoutes := make(map[string]bool)
 	for _, r := range routes {
-		if method, exists := expectedRoutes[r.Path]; exists {
-			assert.Equal(t, method, r.Method, "Unexpected method for route %s", r.Path)
-			foundRoutes[r.Path] = true
+		if method, exists := expectedRoutes[r.Path()]; exists {
+			assert.Equal(t, method, r.Method(), "Unexpected method for route %s", r.Path())
+			foundRoutes[r.Path()] = true
 		}
 	}
 

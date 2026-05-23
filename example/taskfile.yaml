@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 tasks:
   gen-templ:
@@ -17,8 +17,7 @@ tasks:
   gen-pages:
     cmds:
       - |
-        source ../scripts/ccff.sh
-        ccff generate/pages \
+        go run ../. generate/pages \
           -pages pages \
           -output internal/router/router.go \
           -package router
@@ -40,8 +39,7 @@ tasks:
   gen-content:
     cmds:
       - |
-        source ../scripts/ccff.sh
-        ccff generate/content \
+        go run ../. generate/content \
           -content content
 
   live:content:
@@ -103,7 +101,7 @@ tasks:
   live:
     cmds:
       - |
-        task -p \
+        go run github.com/go-task/task/v3/cmd/task@latest -p \
           live:templ \
           live:server \
           live:pages \
@@ -114,7 +112,7 @@ tasks:
   build:
     cmds:
       - |
-        task \
+        go run github.com/go-task/task/v3/cmd/task@latest \
           gen-templ \
           gen-pages \
           gen-content \
