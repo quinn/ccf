@@ -9,7 +9,7 @@ import (
 
 	"golang.org/x/mod/modfile"
 
-	"go.quinn.io/ccf/internal/codegen"
+	"go.quinn.io/ccf/v2/internal/codegen"
 )
 
 func Main() {

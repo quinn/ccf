@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"go.quinn.io/ccf/assets"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
+	"go.quinn.io/ccf/v2/assets"
 	"{{ .mod }}/content"
 	"{{ .mod }}/internal/router"
 )

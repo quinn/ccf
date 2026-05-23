@@ -2,7 +2,7 @@
 package {{.PackageName}}
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	pages "{{.PagesImport}}"
 )
 
@@ -22,25 +22,25 @@ func RegisterRoutes(e *echo.Echo) {
 {{- range .Routes}}
 
 // {{.GETHandler}} handles GET requests to {{.Path}}
-func {{.GETHandler}}(c echo.Context) error {
+func {{.GETHandler}}(c *echo.Context) error {
 	{{- if .Params}}
 	result, err := pages.{{.Component}}GET(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
 	if err != nil {
 		return err
 	}
-	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
+	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response())
 	{{- else}}
 	result, err := pages.{{.Component}}GET(c)
 	if err != nil {
 		return err
 	}
-	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response().Writer)
+	return pages.{{.Component}}(result).Render(c.Request().Context(), c.Response())
 	{{- end}}
 }
 
 {{- if .HasPOST}}
 // {{.POSTHandler}} handles POST requests to {{.Path}}
-func {{.POSTHandler}}(c echo.Context) error {
+func {{.POSTHandler}}(c *echo.Context) error {
 	{{- if .Params}}
 	return pages.{{.Component}}POST(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
 	{{- else}}
@@ -51,7 +51,7 @@ func {{.POSTHandler}}(c echo.Context) error {
 
 {{- if .HasDELETE}}
 // {{.DELETEHandler}} handles DELETE requests to {{.Path}}
-func {{.DELETEHandler}}(c echo.Context) error {
+func {{.DELETEHandler}}(c *echo.Context) error {
 	{{- if .Params}}
 	return pages.{{.Component}}DELETE(c, {{range $i, $p := .Params}}{{if $i}}, {{end}}c.Param("{{.}}"){{end}})
 	{{- else}}

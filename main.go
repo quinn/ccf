@@ -4,10 +4,10 @@ import (
 	"log"
 	"os"
 
-	"go.quinn.io/ccf/cmd/esm"
-	"go.quinn.io/ccf/cmd/fonts"
-	"go.quinn.io/ccf/cmd/generate/content"
-	"go.quinn.io/ccf/cmd/generate/pages"
+	"go.quinn.io/ccf/v2/cmd/esm"
+	"go.quinn.io/ccf/v2/cmd/fonts"
+	"go.quinn.io/ccf/v2/cmd/generate/content"
+	"go.quinn.io/ccf/v2/cmd/generate/pages"
 )
 
 func main() {

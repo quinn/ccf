@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.quinn.io/ccf/fonts"
+	"go.quinn.io/ccf/v2/fonts"
 	"gopkg.in/yaml.v3"
 )
 

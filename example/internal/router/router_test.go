@@ -1,13 +1,21 @@
 package router
 
 import (
+	"embed"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"
+	"go.quinn.io/ccf/v2/assets"
 )
+
+func TestMain(m *testing.M) {
+	e := echo.New()
+	assets.Attach(e, "public", "../../internal/web/public", embed.FS{}, false)
+	m.Run()
+}
 
 func TestIndexHandler(t *testing.T) {
 	// Setup
@@ -32,9 +40,7 @@ func TestBlogSlugHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/blog/test-post", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.SetPath("/blog/:slug")
-	c.SetParamNames("slug")
-	c.SetParamValues("test-post")
+	c.SetPathValues(echo.PathValues{{Name: "slug", Value: "test-post"}})
 
 	// Test
 	err := BlogSlugGET(c)
@@ -54,7 +60,7 @@ func TestRegisterRoutes(t *testing.T) {
 	RegisterRoutes(e)
 
 	// Get registered routes
-	routes := e.Routes()
+	routes := e.Router().Routes()
 
 	// Expected routes
 	expectedRoutes := map[string]string{
